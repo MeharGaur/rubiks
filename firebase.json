@@ -1,0 +1,13 @@
+{
+  "hosting": {
+    "site": "rubiks",
+
+    "public": "build",
+    
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
