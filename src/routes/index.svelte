@@ -1,48 +1,37 @@
-<!-- 
-  In THREE/OGL You can't have an object with multiple parents. So same 
-  piece can't be in multiple Groups. Workarounds:
-
-      - Can transform each cube individually. This takes some math and is
-      going to be finnicky. See https://mehar-lab.web.app/marble-rubiks-loop
-
-      - Can make a group and reparent the cubes of only the layer that is 
-      about to be turned. After rotating the layer (Group) and then deleting
-      the Group, will the pieces stay in the right spot?
-          - This is definitely simpler, abstracts away transformations logic
- -->
-
-
 <!--—————————— MARKUP ——————————-->
 
-<canvas bind:this={canvas} />
+<canvas bind:this={canvas} on:click={() => cube.parseCommandCodes('L R U')} />
 
 
 <!--—————————— SCRIPTS ——————————-->
 
-<script context="module">
-  export const prerender = true
-</script>
-
 <script lang="ts">
   import { onMount } from 'svelte'
 
-  import { BoxGeometry, Clock, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, WebGLRenderer } from 'three'
+  import { AxesHelper, Clock, PerspectiveCamera, Scene, WebGLRenderer } from 'three'
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
   import Cube from '$lib/frontend/Cube'
 
   // Canvas
   let canvas: HTMLCanvasElement
+  let cube: Cube
 
   onMount(() => {
+
+    // ————————— 3D World —————————
     
     // Scene
     const scene = new Scene()
 
     // Instantiate Rubiks Cube
-    const cube = new Cube(scene)
+    cube = new Cube(scene)
+
+    // Axes Helper
+    const axesHelper = new AxesHelper()
+    scene.add(axesHelper)
     
-    // 
+    // ————————— WebGL Boilerplate —————————
 
     // Window & Resizing
     const sizes = {
@@ -62,7 +51,9 @@
 
     // Camera
     const camera = new PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-    camera.position.z = 3
+    camera.position.x = 1
+    camera.position.y = 1
+    camera.position.z = 1
     scene.add(camera)
 
     // Controls
@@ -99,7 +90,10 @@
     return function onDestroy() {
       canvas = undefined
       renderer.dispose()
-      renderer.context.getExtension('WEBGL_lose_context').loseContext()
+
+      renderer.getContext()
+        .getExtension('WEBGL_lose_context')
+        .loseContext()
     }
 
   })
