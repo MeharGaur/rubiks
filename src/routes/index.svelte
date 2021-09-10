@@ -1,15 +1,21 @@
 <!--—————————— MARKUP ——————————-->
 
-<canvas bind:this={canvas} on:click={() => cube.parseCommandCodes('L R U')} />
+<canvas bind:this={canvas} on:click={() => {
+  cube.parseCommandCodes(`L L' R R' U U' D D' F F' B B' M M' E E' S S'`)
+}} />
 
 
 <!--—————————— SCRIPTS ——————————-->
+
+<script context="module">
+	export const ssr = false
+</script>
 
 <script lang="ts">
   import { onMount } from 'svelte'
 
   import { AxesHelper, Clock, PerspectiveCamera, Scene, WebGLRenderer } from 'three'
-  import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+  import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
   import Cube from '$lib/frontend/Cube'
 
@@ -43,6 +49,10 @@
       // Update sizes
       sizes.width = window.innerWidth
       sizes.height = window.innerHeight
+
+      // TODO: Fix the canvas not resizing when window gets larger
+      canvas.width = sizes.width
+      canvas.height = sizes.height
 
       // Update camera
       camera.aspect = sizes.width / sizes.height
@@ -113,7 +123,11 @@
 
   canvas {
     position: fixed;
+    width: 100vw;
+    height: 100vh;
     top: 0;
+    right: 0;
+    bottom: 0;
     left: 0;
     outline: none;
     user-select: none;

@@ -4,25 +4,20 @@ import { gsap } from 'gsap'
 import { getCommandByCode } from './Commands'
 import type { Command, CommandCode } from './Commands'
 import Queue from './Queue'
+import { DIMENSIONS, PIECE_SIZE } from './Parameters'
 
 //
 
 export default class Cube {
   
-  private dimensions: number
-  private pieceSize: number
+  private dimensions: number = DIMENSIONS
+  private pieceSize: number = PIECE_SIZE
   private cubeSize: number
   private matrix: Array<[ ]> | Array<Mesh> = [ ]
   private cubeGroup: Group = new Group()
   private commandQueue: Queue = new Queue(this.executeCommand.bind(this))
 
   constructor(private scene: Scene) {
-
-    /** Dimensions for the cube, currently 3x3. TODO: make dimensions configurable */
-    this.dimensions = 3
-
-    /** Size of each piece, currently 0.33 world units. TODO: make piece size configurable */
-    this.pieceSize = 1 / 3
 
     this.cubeSize = this.dimensions * this.pieceSize
 
@@ -73,7 +68,14 @@ export default class Cube {
     const commandCodes = <Array<CommandCode>> commandCodeString.split(' ')
 
     for (const commandCode of commandCodes) {
-      this.commandQueue.enqueue(getCommandByCode(commandCode))
+      const command = getCommandByCode(commandCode)
+
+      if (command) {
+        this.commandQueue.enqueue(command)
+      }
+      else {
+        console.warn(`${ commandCode } is an invalid command code. Refer to Commands.ts for valid command codes.`)
+      }
     }
   }
 
@@ -96,10 +98,13 @@ export default class Cube {
     await gsap.to(layerGroup.rotation, {
       // TODO: There might be double turns, like '2U' or '2F'. 
       // Turn it by a full PI to do double turn
+      // ***** Even better, toss it into the queue but have the queue automatically coalesce back-to-back same commands into one command
       [ command.axis ]: `${ command.direction }=${ Math.PI / 2 }`,
 
-      // TODO: Need snappier and nicer timing and easing
-      duration: 1
+      duration: 0.95,
+      
+      // TODO: make a custom ease– need a less bounce at the start and more at the end. Right now 1.8 at both ends.
+      ease: 'back.inOut(1.8)'
     })
 
     // THREE does not retain local transforms if you remove a child from a group.
