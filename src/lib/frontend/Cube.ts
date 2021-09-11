@@ -25,8 +25,8 @@ export default class Cube {
 
     // TODO: We want a nice brushed steel kinda material, would need to figure out the colors tho
     // TODO: Put black gaps between the cubes like how it would be in real life?
-    const pinkMaterial = new MeshBasicMaterial({ color: 0xff00ff })
-    const aquaMaterial = new MeshBasicMaterial({ color: 0x00ffff })
+    const lightMaterial = new MeshBasicMaterial({ color: 0xDFDFC3 })
+    const darkMaterial = new MeshBasicMaterial({ color: 0x292929 })
 
     /** Offset by half of the total cube size in each axis so it's centered in the world */
     const pieceSizeOffset = (this.cubeSize / 2) - (this.pieceSize / 2)
@@ -41,7 +41,9 @@ export default class Cube {
         for (let z = 0; z < this.dimensions; z++) {
           this.matrix[x][y][z] = new Mesh(
             geometry, 
-            (Math.random() > 0.5) ? pinkMaterial : aquaMaterial // Pink/aqua materials just for testing
+            // Checking parity of the sum of the axes' indices is a math trick to do the even/odd coloring without writing custom logic
+            // Refer to start of Sebastian Lague chess AI video 
+            ((x + y + z) % 2 == 0) ? lightMaterial : darkMaterial
           )
           
           // Set the position for the piece based on the current index of each axis
