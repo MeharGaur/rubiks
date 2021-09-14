@@ -1,11 +1,13 @@
-import { BoxGeometry, Group, Mesh, MeshBasicMaterial, Quaternion, Scene, Vector3 } from 'three'
+import { BoxGeometry, Color, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial, Quaternion, Scene, Vector3 } from 'three'
 import { gsap } from 'gsap'
 
 import { getCommandByCode } from './Commands'
+import { ALL_FACELET_POSITIONS } from './Types'
 import type { Command, CommandCode } from './Types'
 import Queue from './Queue'
 import { DIMENSIONS, PIECE_SIZE } from './Config'
 import Piece from './Piece'
+import { colorMap, piecesData } from './CubeDefinition'
 
 //
 
@@ -15,65 +17,119 @@ export default class Cube {
   private pieceSize: number = PIECE_SIZE
   private cubeSize: number
   private pieces: Array<Piece> = [ ]
-  private cubeDefinition: string
+  private cubeDefinition: string = 'DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD'
   private cubeGroup: Group = new Group()
   private commandQueue: Queue = new Queue(this.executeCommand.bind(this))
 
   constructor(private scene: Scene) {
-
-    this.scramble()
+    // this.generateGeometries()
 
     this.cubeSize = this.dimensions * this.pieceSize
-
-    const geometry = new BoxGeometry(this.pieceSize, this.pieceSize, this.pieceSize)
-
-    // TODO: We want a nice brushed steel kinda material, would need to figure out the colors tho
-    // TODO: Put black gaps between the cubes like how it would be in real life?
-    const lightMaterial = new MeshBasicMaterial({ color: 0xDFDFC3 })
-    const darkMaterial = new MeshBasicMaterial({ color: 0x292929 })
 
     /** Offset by half of the total cube size in each axis so it's centered in the world */
     const pieceSizeOffset = (this.cubeSize / 2) - (this.pieceSize / 2)
 
+    const colorFaceletMap = { }
+    
+    for (let i = 0; i < ALL_FACELET_POSITIONS.length; i++) {
+      colorFaceletMap[ ALL_FACELET_POSITIONS[i] ] = colorMap[ this.cubeDefinition[i] ]
+    }
+
+    // TODO: We want a nice brushed steel kinda material, would need to figure out the colors tho
+    // TODO: Put black gaps between the cubes like how it would be in real life?
+    const material = new MeshBasicMaterial({ vertexColors: true })
+
     // Generate the pieces (aka cubelets) 
     // TODO: Generate based on color, not just xyz index
     // https://github.com/muodov/kociemba#cube-string-notation
+    for (const { isCore, indices, faceletPositions } of piecesData) {
+      const facelets = [ ]
 
-    for (let x = 0; x < this.dimensions; x++) {
+      for (let i = 0; i < faceletPositions.length; i++) {
+        facelets.push({
+          position: faceletPositions[i],
+          ...colorFaceletMap[ faceletPositions[i] ]
+        })
+      }
 
-      for (let y = 0; y < this.dimensions; y++) {
+      const geometry = 
+        new BoxGeometry(this.pieceSize, this.pieceSize, this.pieceSize)
+        .toNonIndexed()
+
+      const colors = [ ]
+      const color = new Color()
+
+      const facesOrder = [ ]
+
+      for (const facelet of facelets) {
+        const face = facelet.position[0]
+        let index
         
-        for (let z = 0; z < this.dimensions; z++) {
-          const pieceIndex = (x * 9) + (y * 3) + (z)
+        // Right face is index 0
+        if (face == 'R') {
+          index = 0
+        }
+        // Left face is index 1
+        else if (face == 'L') {
+          index = 1
+        }
+        // Up face is index 2
+        else if (face == 'U') {
+          index = 2
+        }
+        // Down face is index 3
+        else if (face == 'D') {
+          index = 3
+        }
+        // Front face is index 4
+        else if (face == 'F') {
+          index = 4
+        }
+        // Back face is index 5
+        else if (face == 'B') {
+          index = 5
+        }
 
-          // 
+        facesOrder[index] = facelet.colorHex
+      }
 
-          setTimeout(() => {
-            const piece = new Piece(
-              'U', 
-              new Vector3(x, y, z), 
-              new Mesh(
-                geometry,
-                ((x + y + z) % 2 == 0) ? lightMaterial : darkMaterial
-              )
-            )
-            
-            this.pieces[pieceIndex] = piece
-            
-            // Set the position for the piece based on the current index of each axis
-            piece.mesh.position.x = (x * this.pieceSize) - pieceSizeOffset
-            piece.mesh.position.y = (y * this.pieceSize) - pieceSizeOffset
-            piece.mesh.position.z = (z * this.pieceSize) - pieceSizeOffset
-            
-            // Add each piece to the scene
-            this.cubeGroup.add(this.pieces[pieceIndex].mesh)
-          }, pieceIndex * 1000)
+      for (let i = 0; i < 6; i++) {
+        let colorHex
+
+        if (facesOrder[i]) {
+          colorHex = facesOrder[i]
+        }
+        else {
+          colorHex = 0x000000
+        }
+
+        color.set(colorHex)
+
+        for (let i = 0; i < 6; i++) {
+          colors.push(color.r, color.g, color.b)
         }
       }
+
+      geometry.setAttribute('color', new Float32BufferAttribute( colors, 3 ))
+
+      const mesh = new Mesh(geometry, material)
+
+      // Set the position for the piece based on the current index of each axis
+      mesh.position.x = (indices.x * this.pieceSize) - pieceSizeOffset
+      mesh.position.y = (indices.y * this.pieceSize) - pieceSizeOffset
+      mesh.position.z = (indices.z * this.pieceSize) - pieceSizeOffset
+
+      // Add each piece mesh to the scene so it renders
+      // Delay each cube one by one:   setTimeout(() => , 1000 * (indices.x * 9 + indices.y * 3 + indices.z))
+      this.cubeGroup.add(mesh)
+      
+
+      this.pieces.push(new Piece( indices, facelets, mesh ))
     }
 
     this.scene.add(this.cubeGroup) 
   }
+  
 
   /** 
    * Parse a string of command codes, enqueue each command.

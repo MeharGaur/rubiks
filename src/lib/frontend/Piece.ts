@@ -1,15 +1,16 @@
 import type { Mesh, Vector3 } from 'three'
-import type { FaceletPosition } from './Types'
 
 export default class Piece {
   
-  facelets: Array<FaceletPosition>
+  facelets: Array<object>
   indices: Vector3
   mesh: Mesh
 
-  constructor(colorCode, indices, mesh) {
+  constructor(indices, facelets, mesh) {
+    this.facelets = facelets
     this.indices = indices
     this.mesh = mesh
   }
 
 }
+

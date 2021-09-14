@@ -1,6 +1,7 @@
 import type { Object3D } from "three"
 import { PRECISION } from "./Config"
-import { Axes, CommandCode, Commands, Directions } from "./Types"
+import { Axes, Directions } from "./Types"
+import type { CommandCode, Commands } from "./Types"
 
 
 /**

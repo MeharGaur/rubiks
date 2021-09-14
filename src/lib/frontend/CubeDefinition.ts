@@ -1,124 +1,199 @@
-import { Axes, Directions } from "./Types"
+import { Axes, Colors, Directions } from "./Types"
+import type { PieceData } from './Types'
 
-export const pieceData = [
+export const piecesData: Array<PieceData> = [
+  
   {
-    isCorner: true,
     indices: { x: 0, y: 0, z: 0 },
-    // ********** TODO: Facelets axis and axisDirection might not be needed as we can determine axis and direction just from the ColorCode
-    // NOTE: If it only has one facelete then it's a middle, if it has two then normal, if it has three then corner. Don't need to hardcode it here
-    facelets: {
-      D7: { axis: 'y', axisDirection: Directions.Negative },
-      L7: { axis: 'x', axisDirection: Directions.Negative },
-      B9: { axis: 'z', axisDirection: Directions.Negative },
-    }
+    faceletPositions: [ 'D7', 'L7', 'B9' ]
   },
 
   {
-    isCorner: false,
     indices: { x: 0, y: 0, z: 1 },
-    facelets: {
-      D4: { axis: 'y', axisDirection: Directions.Negative },
-      L8: { axis: 'x', axisDirection: Directions.Negative },
-    }
+    faceletPositions: [ 'D4', 'L8' ]
   },
 
   {
-    isCorner: true,
     indices: { x: 0, y: 0, z: 2 },
-    facelets: {
-      F7: { axis: 'z', axisDirection: Directions.Positive },
-      D1: { axis: 'y', axisDirection: Directions.Negative },
-      L9: { axis: 'x', axisDirection: Directions.Negative },
-    }
+    faceletPositions: [ 'F7', 'D1', 'L9' ]
   },
 
+  //
+
   {
-    isCorner: false,
     indices: { x: 0, y: 1, z: 0 },
-    facelets: {
-      L4: { axis: 'x', axisDirection: Directions.Negative },
-      B6: { axis: 'z', axisDirection: Directions.Negative },
-    }
+    faceletPositions: [ 'L4', 'B6' ]
   },
   
   {
-    isCorner: false,
     indices: { x: 0, y: 1, z: 1 },
-    facelets: {
-      L5: { axis: 'x', axisDirection: Directions.Negative },
-    }
+    faceletPositions: [ 'L5' ]
   },
 
   {
-    isCorner: false,
     indices: { x: 0, y: 1, z: 2 },
-    facelets: {
-      F4: { axis: 'z', axisDirection: Directions.Positive },
-      L6: { axis: 'x', axisDirection: Directions.Negative },
-    }
+    faceletPositions: [ 'F4', 'L6' ]
   },
 
+  //
+
   {
-    isCorner: true,
     indices: { x: 0, y: 2, z: 0 },
-    facelets: {
-      U1: { axis: 'y', axisDirection: Directions.Positive },
-      L1: { axis: 'x', axisDirection: Directions.Negative },
-      B3: { axis: 'z', axisDirection: Directions.Negative },
-    }
+    faceletPositions: [ 'U1', 'L1', 'B3' ]
   },
 
   {
-    isCorner: false,
     indices: { x: 0, y: 2, z: 1 },
-    facelets: {
-      U4: { axis: 'y', axisDirection: Directions.Positive },
-      L2: { axis: 'x', axisDirection: Directions.Negative },
-    }
+    faceletPositions: [ 'U4', 'L2' ]
   },
 
   {
-    isCorner: true,
     indices: { x: 0, y: 2, z: 2 },
-    facelets: {
-      U7: { axis: 'y', axisDirection: Directions.Positive },
-      F1: { axis: 'z', axisDirection: Directions.Positive },
-      L3: { axis: 'x', axisDirection: Directions.Negative },
-    }
+    faceletPositions: [ 'U7', 'F1', 'L3' ]
   },
+
+  // —————
+
+  {
+    indices: { x: 1, y: 0, z: 0 },
+    faceletPositions: [ 'D8', 'B8' ]
+  },
+
+  {
+    indices: { x: 1, y: 0, z: 1 },
+    faceletPositions: [ 'D5' ]
+  },
+
+  {
+    indices: { x: 1, y: 0, z: 2 },
+    faceletPositions: [ 'D2', 'F8' ]
+  },
+
+  //
+
+  {
+    indices: { x: 1, y: 1, z: 0 },
+    faceletPositions: [ 'B5' ]
+  },
+
+  {
+    isCore: true,
+    indices: { x: 1, y: 1, z: 1 },
+    faceletPositions: [ ]
+  },
+
+  {
+    indices: { x: 1, y: 1, z: 2 },
+    faceletPositions: [ 'F5' ]
+  },
+
+  //
+
+  {
+    indices: { x: 1, y: 2, z: 0 },
+    faceletPositions: [ 'U2', 'B2' ]
+  },
+
+  {
+    indices: { x: 1, y: 2, z: 1 },
+    faceletPositions: [ 'U5' ]
+  },
+
+  {
+    indices: { x: 1, y: 2, z: 2 },
+    faceletPositions: [ 'U8', 'F2' ]
+  },
+
+  // —————
+
+  {
+    indices: { x: 2, y: 0, z: 0 },
+    faceletPositions: [ 'R9', 'B7', 'D9' ]
+  },
+
+  {
+    indices: { x: 2, y: 0, z: 1 },
+    faceletPositions: [ 'R8', 'D6' ]
+  },
+
+  {
+    indices: { x: 2, y: 0, z: 2 },
+    faceletPositions: [ 'F9', 'R7', 'D3' ]
+  },
+
+  //
+
+  {
+    indices: { x: 2, y: 1, z: 0 },
+    faceletPositions: [ 'R6', 'B4' ]
+  },
+
+  {
+    indices: { x: 2, y: 1, z: 1 },
+    faceletPositions: [ 'R5' ]
+  },
+
+  {
+    indices: { x: 2, y: 1, z: 2 },
+    faceletPositions: [ 'R4', 'F6' ]
+  },
+
+  //
+
+  {
+    indices: { x: 2, y: 2, z: 0 },
+    faceletPositions: [ 'R3', 'B1', 'U3' ]
+  },
+
+  {
+    indices: { x: 2, y: 2, z: 1 },
+    faceletPositions: [ 'R2', 'U6' ]
+  },
+
+  {
+    indices: { x: 2, y: 2, z: 2 },
+    faceletPositions: [ 'R1', 'U9', 'F3' ]
+  },
+
 ]
+
 
 /**
  * Cube faces lookup to see which facelets of a Piece should be what color
  */
-const faces = {
+export const colorMap = {
   U: {
-    color: 'someColor like Red -- use an enum',
+    colorHex: Colors.White,
     axis: Axes.Y, 
     axisDirection: Directions.Positive 
   },
 
   R: {
+    colorHex: Colors.Red,
     axis: Axes.X, 
     axisDirection: Directions.Positive 
   },
 
   F: {
+    colorHex: Colors.Green,
     axis: Axes.Z, 
     axisDirection: Directions.Positive
   },
 
   D: {
+    colorHex: Colors.Yellow,
     axis: Axes.Y, 
     axisDirection: Directions.Negative
   },
 
   L: {
+    colorHex: Colors.Orange,
     axis: Axes.X, 
     axisDirection: Directions.Negative
   },
 
   B: {
+    colorHex: Colors.Blue,
     axis: Axes.Z, 
     axisDirection: Directions.Negative
   },
