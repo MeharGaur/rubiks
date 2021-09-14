@@ -13,13 +13,6 @@ const config = {
     adapter: adapterStatic(),
 
     ssr: false,
-
-    vite: {
-      // Keep getting a "Must use import to load ES Module" error with ssr
-      // ssr: {
-      //   noExternal: [ 'three/examples/jsm/controls/OrbitControls' ]
-      // }
-    }
   },
 }
 

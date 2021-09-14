@@ -1,63 +1,13 @@
-import type { Mesh, Object3D } from "three"
-import { PIECE_SIZE, PRECISION } from "./Parameters"
+import type { Object3D } from "three"
+import { PRECISION } from "./Config"
+import { Axes, CommandCode, Commands, Directions } from "./Types"
 
-/**
- * https://ruwix.com/the-rubiks-cube/notation/advanced/
- */
-export type CommandCode = 
-
-  // clockwise
-  `U`  | `L`  | `F`  | `R`  | `B`  | `D`  |
-
-  // counterClockwise
-  `U'` | `L'` | `F'` | `R'` | `B'` | `D'` |
-
-  // slice
-  `M'` | `M'` | `E`  | `E'` | `S`  | `S'` |
-
-  // double
-  `u`  | `l`  | `f`  | `r`  | `b`  | `d`  |
-
-  // inverseDouble
-  `u'` | `l'` | `f'` | `r'` | `b'` | `d'` |
-
-  // wholeCube
-  `X`  | `X'` | `Y`  | `Y'` | `Z`  | `Z'` 
-
-
-enum Axes {
-  X = 'x',
-
-  Y = 'y',
-
-  Z = 'z'
-}
-
-enum Directions {
-  Positive = '+',
-
-  Negative = '-'
-}
-
-//
-
-export interface Command {
-  code: CommandCode
-
-  axis: Axes.X | Axes.Y | Axes.Z,
-
-  direction: Directions.Positive | Directions.Negative
-
-  selector: (pieces: Array<Object3D>) => Array<Object3D>
-}
-  
-
-interface Commands {
-  [key: string]: Command
-}
 
 /**
  * IIFE that generates all the commands and associated metadata for a 3x3 rubik's cube
+ * 
+ * TODO: Refactor commands to use pieces array, not directly from the scene
+ * 
  */
 const commands = ((): Commands => {
 
@@ -192,13 +142,14 @@ function filterSelector(predicate: (piece) => boolean) {
 //
 
 /** 
- * Find the right Command object from given code
+ * Find the right Command object from given code. Shallow clone it cause 
+ * it's passed by reference, don't want to mutate global commands object.
  */
-export function getCommandByCode(code: CommandCode) {
-  return commands[
-    Object.keys(commands)
-      .find(key => commands[key].code == code)
-  ]
+export function getCommandByCode(code: CommandCode, repetitions: number) {
+  const commandName = Object.keys(commands)
+    .find(key => commands[key].code == code)
+
+  return Object.assign({ repetitions }, commands[commandName])
 }
 
 

@@ -1,4 +1,4 @@
-import type { Command } from './Commands'
+import type { Command } from './Types'
 
 // If cube is currently animating don't add user actions to queue // TODO: figure out user controls
 

@@ -1,10 +1,11 @@
 import { BoxGeometry, Group, Mesh, MeshBasicMaterial, Quaternion, Scene, Vector3 } from 'three'
-
 import { gsap } from 'gsap'
+
 import { getCommandByCode } from './Commands'
-import type { Command, CommandCode } from './Commands'
+import type { Command, CommandCode } from './Types'
 import Queue from './Queue'
-import { DIMENSIONS, PIECE_SIZE } from './Parameters'
+import { DIMENSIONS, PIECE_SIZE } from './Config'
+import Piece from './Piece'
 
 //
 
@@ -13,11 +14,14 @@ export default class Cube {
   private dimensions: number = DIMENSIONS
   private pieceSize: number = PIECE_SIZE
   private cubeSize: number
-  private matrix: Array<[ ]> | Array<Mesh> = [ ]
+  private pieces: Array<Piece> = [ ]
+  private cubeDefinition: string
   private cubeGroup: Group = new Group()
   private commandQueue: Queue = new Queue(this.executeCommand.bind(this))
 
   constructor(private scene: Scene) {
+
+    this.scramble()
 
     this.cubeSize = this.dimensions * this.pieceSize
 
@@ -31,28 +35,39 @@ export default class Cube {
     /** Offset by half of the total cube size in each axis so it's centered in the world */
     const pieceSizeOffset = (this.cubeSize / 2) - (this.pieceSize / 2)
 
-    // Generate the cube matrix
+    // Generate the pieces (aka cubelets) 
+    // TODO: Generate based on color, not just xyz index
+    // https://github.com/muodov/kociemba#cube-string-notation
+
     for (let x = 0; x < this.dimensions; x++) {
-      this.matrix[x] = [ ]
 
       for (let y = 0; y < this.dimensions; y++) {
-        this.matrix[x][y] = [ ]
         
         for (let z = 0; z < this.dimensions; z++) {
-          this.matrix[x][y][z] = new Mesh(
-            geometry, 
-            // Checking parity of the sum of the axes' indices is a math trick to do the even/odd coloring without writing custom logic
-            // Refer to start of Sebastian Lague chess AI video 
-            ((x + y + z) % 2 == 0) ? lightMaterial : darkMaterial
-          )
-          
-          // Set the position for the piece based on the current index of each axis
-          this.matrix[x][y][z].position.x = (x * this.pieceSize) - pieceSizeOffset
-          this.matrix[x][y][z].position.y = (y * this.pieceSize) - pieceSizeOffset
-          this.matrix[x][y][z].position.z = (z * this.pieceSize) - pieceSizeOffset
-          
-          // Add each piece to the scene
-          this.cubeGroup.add(this.matrix[x][y][z])
+          const pieceIndex = (x * 9) + (y * 3) + (z)
+
+          // 
+
+          setTimeout(() => {
+            const piece = new Piece(
+              'U', 
+              new Vector3(x, y, z), 
+              new Mesh(
+                geometry,
+                ((x + y + z) % 2 == 0) ? lightMaterial : darkMaterial
+              )
+            )
+            
+            this.pieces[pieceIndex] = piece
+            
+            // Set the position for the piece based on the current index of each axis
+            piece.mesh.position.x = (x * this.pieceSize) - pieceSizeOffset
+            piece.mesh.position.y = (y * this.pieceSize) - pieceSizeOffset
+            piece.mesh.position.z = (z * this.pieceSize) - pieceSizeOffset
+            
+            // Add each piece to the scene
+            this.cubeGroup.add(this.pieces[pieceIndex].mesh)
+          }, pieceIndex * 1000)
         }
       }
     }
@@ -69,8 +84,22 @@ export default class Cube {
   parseCommandCodes(commandCodeString: string) {
     const commandCodes = <Array<CommandCode>> commandCodeString.split(' ')
 
-    for (const commandCode of commandCodes) {
-      const command = getCommandByCode(commandCode)
+    for (let commandCode of commandCodes) {
+      /**
+       * Set the number of repetitions to 1 by default. 
+       * Backend only sends single-digit repetition amounts.
+       */
+      const repetitionsToExecute = parseInt(commandCode.slice(-1)) || 1
+
+      // Need just the letters if repetitions is specified
+      if (repetitionsToExecute > 1) {
+        commandCode = <CommandCode> commandCode.slice(0, -1)
+      }
+
+      const command = getCommandByCode(
+        <CommandCode> commandCode, 
+        repetitionsToExecute
+      )
 
       if (command) {
         this.commandQueue.enqueue(command)
@@ -97,16 +126,16 @@ export default class Cube {
 
     this.cubeGroup.add(layerGroup)
 
-    await gsap.to(layerGroup.rotation, {
-      // TODO: There might be double turns, like '2U' or '2F'. 
-      // Turn it by a full PI to do double turn
-      // ***** Even better, toss it into the queue but have the queue automatically coalesce back-to-back same commands into one command
-      [ command.axis ]: `${ command.direction }=${ Math.PI / 2 }`,
+    // TODO: pile all the commands onto a gsap timeline so we can set ease and duration for the whole thing. 
 
-      duration: 0.95,
+    await gsap.to(layerGroup.rotation, {
+      [ command.axis ]: `
+        ${ command.direction }=${ (Math.PI / 2) * command.repetitions }
+      `,
+
+      duration: 0.7 + (command.repetitions * 0.3),
       
-      // TODO: make a custom ease– need a less bounce at the start and more at the end. Right now 1.8 at both ends.
-      ease: 'back.inOut(1.8)'
+      ease: 'back.inOut(1)'
     })
 
     // THREE does not retain local transforms if you remove a child from a group.
@@ -131,6 +160,12 @@ export default class Cube {
     if (this.commandQueue.commands.length > 0) {
       this.executeCommand(this.commandQueue.commands[0])
     }
+  }
+
+  //
+
+  scramble() {
+    this.cubeDefinition = 'DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD'  
   }
 
 }
