@@ -5,19 +5,19 @@
 #include "search.h"
 
 EMSCRIPTEN_KEEPALIVE
-extern const char* solve(int argc, char sourceDefinition[54])
+extern const char* solve(int argc, char facelets[54])
 {
-    printf("Argument: %s \n", sourceDefinition);
+    printf("Argument: %s \n", facelets);
 
     if (argc > 1) {
         char patternized[64];
         // TODO: Add targetDefinition
         // if (argc > 2) {
-        //     patternize(sourceDefinition, &argv[2], patternized);
-        //     sourceDefinition = patternized;
+        //     patternize(facelets, &argv[2], patternized);
+        //     facelets = patternized;
         // }
         char *sol = solution(
-            sourceDefinition,
+            facelets,
             24,
             1000,
             0,

@@ -2,29 +2,43 @@ import { BoxGeometry, Color, Float32BufferAttribute, Group, Mesh, MeshBasicMater
 import { gsap } from 'gsap'
 
 import { getCommandByCode } from './Commands'
-import { ALL_FACELET_POSITIONS } from './Types'
 import type { Command, CommandCode } from './Types'
 import Queue from './Queue'
-import { DIMENSIONS, PIECE_SIZE } from './Config'
-import Piece from './Piece'
-import { colorMap, piecesData } from './CubeDefinition'
+import { DIMENSIONS, PIECE_SIZE, SOLVED_CUBE } from './Config'
+import { Piece, colorMap, piecesData, getIndexFromFace } from './Piece'
+import { Facelet } from './Facelet'
+import { shuffle } from './Utils'
 
 //
 
 export default class Cube {
   
+  /** Dimensions for the cube, default 3x3 */
   private dimensions: number = DIMENSIONS
+  
+  /** Size of each piece, currently 0.33 world units */
   private pieceSize: number = PIECE_SIZE
+
+  /** Size of the whole cube in world units */
   private cubeSize: number
 
-  /** https://github.com/muodov/kociemba#cube-string-notation */
-  private cubeDefinition: string = 'DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD'
+  /** 
+   * Default is a solved cube
+   * https://github.com/muodov/kociemba#cube-string-notation
+   */
+  private faceletString: string = SOLVED_CUBE
+  
   private pieces: Array<Piece> = [ ]
   private cubeGroup: Group = new Group()
-  private kociemba: (number, string) => string
   private commandQueue: Queue = new Queue(this.executeCommand.bind(this))
 
+  findSolution: (number, string) => string
+
+  //
+
   constructor(private scene: Scene) {
+
+     this.faceletString = this.randomFaceletString()
 
     this.loadBackend()
 
@@ -33,88 +47,31 @@ export default class Cube {
     /** Offset by half of the total cube size in each axis so it's centered in the world */
     const pieceSizeOffset = (this.cubeSize / 2) - (this.pieceSize / 2)
 
-    const colorFaceletMap = { }
-    
-    for (let i = 0; i < ALL_FACELET_POSITIONS.length; i++) {
-      colorFaceletMap[ ALL_FACELET_POSITIONS[i] ] = colorMap[ this.cubeDefinition[i] ]
-    }
-
     // TODO: We want a nice brushed steel kinda material, would need to figure out the colors tho
     // TODO: Put black gaps between the cubes like how it would be in real life?
     const material = new MeshBasicMaterial({ vertexColors: true })
 
     // Generate the pieces (aka cubelets) 
-    for (const { indices, faceletPositions } of piecesData) {
-      const facelets = [ ]
+    for (const { indices, positions } of piecesData) {
+      const facelets: Array<Facelet> = [ ]
 
-      for (let i = 0; i < faceletPositions.length; i++) {
-        facelets.push({
-          position: faceletPositions[i],
-          ...colorFaceletMap[ faceletPositions[i] ]
-        })
+      for (let i = 0; i < positions.length; i++) {
+        facelets.push(
+          new Facelet(positions[i], colorMap[ positions[i][0] ])
+        )
       }
 
       const geometry = 
         new BoxGeometry(this.pieceSize, this.pieceSize, this.pieceSize)
         .toNonIndexed()
 
-      // TODO: Clean up all of the below logic, extract into methods for reusability
-
-      const colors = [ ]
-      const color = new Color()
-
-      const facesOrder = [ ]
-
-      for (const facelet of facelets) {
-        const face = facelet.position[0]
-        let index
-        
-        // Right face is index 0
-        if (face == 'R') {
-          index = 0
-        }
-        // Left face is index 1
-        else if (face == 'L') {
-          index = 1
-        }
-        // Up face is index 2
-        else if (face == 'U') {
-          index = 2
-        }
-        // Down face is index 3
-        else if (face == 'D') {
-          index = 3
-        }
-        // Front face is index 4
-        else if (face == 'F') {
-          index = 4
-        }
-        // Back face is index 5
-        else if (face == 'B') {
-          index = 5
-        }
-
-        facesOrder[index] = facelet.colorHex
-      }
-
-      for (let i = 0; i < 6; i++) {
-        let colorHex
-
-        if (facesOrder[i]) {
-          colorHex = facesOrder[i]
-        }
-        else {
-          colorHex = 0x000000
-        }
-
-        color.set(colorHex)
-
-        for (let i = 0; i < 6; i++) {
-          colors.push(color.r, color.g, color.b)
-        }
-      }
-
-      geometry.setAttribute('color', new Float32BufferAttribute( colors, 3 ))
+      geometry.setAttribute(
+        'color', 
+        new Float32BufferAttribute(
+          this.generateFaceletColors(facelets), 
+          3 
+        )
+      )
 
       const mesh = new Mesh(geometry, material)
 
@@ -126,14 +83,24 @@ export default class Cube {
       // Add each piece mesh to the scene so it renders
       // Delay each cube one by one:   setTimeout(() => , 1000 * (indices.x * 9 + indices.y * 3 + indices.z))
       this.cubeGroup.add(mesh)
-      
 
       this.pieces.push(new Piece( indices, facelets, mesh ))
     }
 
     this.scene.add(this.cubeGroup) 
   }
-  
+
+  //
+
+  /** Solve the cube using kociemba two-phase */
+  solve() {
+
+  }
+
+  /** Scramble the cube to a random configuration */
+  scramble() {
+    
+  }
 
   /** 
    * Parse a string of command codes, enqueue each command.
@@ -141,14 +108,11 @@ export default class Cube {
    * https://ruwix.com/the-rubiks-cube/notation/
    * https://ruwix.com/the-rubiks-cube/notation/advanced/
    */
-  move(commandCodeString: string) {
-    const commandCodes = <Array<CommandCode>> commandCodeString.split(' ')
+  move(commandString: string) {
+    const commandCodes = <Array<CommandCode>> commandString.split(' ')
 
     for (let commandCode of commandCodes) {
-      /**
-       * Set the number of repetitions to 1 by default. 
-       * Backend only sends single-digit repetition amounts.
-       */
+      /** Set the number of repetitions to 1 by default. Repetition amounts are single-digit */
       const repetitionsToExecute = parseInt(commandCode.slice(-1)) || 1
 
       // Need just the letters if repetitions is specified
@@ -167,6 +131,86 @@ export default class Cube {
       else {
         console.warn(`${ commandCode } is an invalid command code. Refer to Commands.ts for valid command codes.`)
       }
+    }
+  }
+
+  //
+
+  /**
+   * A buffer attribute of a mesh is always a flat array, so we need to 
+   * generate a colors array with each RGB value in the right order.
+   */
+  private generateFaceletColors(facelets) {
+
+    const faceletColorIndices = [ ]
+
+    for (const facelet of facelets) {
+      faceletColorIndices[ getIndexFromFace( facelet.position[0] ) ] = 
+        facelet.hexCode
+    }
+
+    const colors = [ ]
+    const color = new Color()
+
+    for (let i = 0; i < 6; i++) {
+      let colorHex
+
+      if (faceletColorIndices[i]) {
+        colorHex = faceletColorIndices[i]
+      }
+      else {
+        colorHex = 0x000000
+      }
+
+      color.set(colorHex)
+
+      for (let i = 0; i < 6; i++) {
+        colors.push(color.r, color.g, color.b)
+      }
+    }
+
+    return colors
+  }
+
+  //
+
+  private randomFaceletString() {
+    // ***** Make sure it generates only valid definitions
+    const faceletString: string = shuffle( SOLVED_CUBE.split('') ).join('')
+    
+    console.log(faceletString)
+
+    return faceletString
+  }
+  
+  //
+
+  // TODO: Reduce the filesize of solve.js generated by emscripten as much as possible. Don't need all the extra node stuff or whatever.
+  private loadBackend() {
+    window.Module = {
+      onRuntimeInitialized: () => {
+        this.findSolution = window.Module.cwrap('solve', 'string', [ 'number', 'string' ])
+
+        console.log(this.findSolution(2, this.faceletString))
+
+        this.move(
+          this.findSolution(2, this.faceletString)
+        )
+      },
+
+      locateFile: (fileName) => {
+        return `${ window.location.href }backend/${ fileName }`
+      }
+    }
+
+    // Run Emscripten glue code if not already run
+    if (!document.querySelector('#solver')) {
+      const script = document.createElement('script')
+      script.src = '/backend/solve.js'
+      script.async = true
+      script.id = "solver"
+      document.body.appendChild(script)
+      // script.onload = () => { } // could return a promise
     }
   }
 
@@ -225,50 +269,11 @@ export default class Cube {
   //
 
 
-  // TODO: Reduce the filesize of solve.js generated by emscripted as much as possible. Don't need all the extra node stuff or whatever.
-  loadBackend() {
-    window.Module = {
-      onRuntimeInitialized: () => {
-        this.kociemba = window.Module.cwrap('solve', 'string', [ 'number', 'string' ])
-
-        this.move(
-          this.kociemba(2, this.cubeDefinition)
-        )
-      },
-
-      locateFile: (fileName) => {
-        return `${ window.location.href }backend/${ fileName }`
-      }
-    }
-
-    const script = document.createElement('script')
-    script.src = '/backend/solve.js'
-    script.async = true
-    document.body.appendChild(script)
-    
-    // could return a promise but constructor funcs can't be async apparently
-    // script.onload = () => { }
-  }
-
-
-  // ✅ TODO: Figure out the cache table loading situation (.data file (to cache), or indexedDB, whichever is faster)
   // Then cleanup the codebase so far
 
   // Then add below methods, then do UI and touch/mouse controls and wrap up
   // TODO: See how the Google Doodle rubiks cube handles solving and user interaction at the same time. Should user be able to interact in the middle of solving?
 
-
-
-
-
-  getCommandsForDefinition(cubeDefinition: string) {
-    // This needs to make a call to the wasm backend to generate commands that result in the given definition string
-  }
-
-  static generateRandomDefinition() {
-    // Static method, generate a random cube definition string, using the R U L D F B
-    // ***** Make sure it generates only valid definitions
-  }
 
 }
 
