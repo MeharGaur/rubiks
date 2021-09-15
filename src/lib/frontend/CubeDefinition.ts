@@ -77,7 +77,7 @@ export const piecesData: Array<PieceData> = [
   },
 
   {
-    isCore: true,
+    // isCore: true, -- this is the core piece
     indices: { x: 1, y: 1, z: 1 },
     faceletPositions: [ ]
   },

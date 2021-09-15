@@ -81,8 +81,6 @@ export type FaceletPosition = FaceletPositions[number]
 
 
 export interface PieceData {
-  isCore?: boolean,
-
   indices: {
     x: number,
     y: number,

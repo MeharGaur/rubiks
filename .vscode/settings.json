@@ -11,6 +11,9 @@
     "stat.h": "c",
     "prunetable_helpers.h": "c",
     "algorithm": "c",
-    "stdlib.h": "c"
+    "stdlib.h": "c",
+    "coordcube.h": "c",
+    "color.h": "c",
+    "facecube.h": "c"
   }
 }

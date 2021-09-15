@@ -207,7 +207,7 @@ void initPruning(const char *cache_dir)
         for (i = 0; i < N_SLICE2 * N_URFtoDLF * N_PARITY / 2; i++)
             Slice_URFtoDLF_Parity_Prun[i] = -1;
         setPruning(Slice_URFtoDLF_Parity_Prun, 0, 0);
-        // printf("1\n");
+        printf("1\n");
         while (done != N_SLICE2 * N_URFtoDLF * N_PARITY) {
             // printf("%d %d %d\n", done, N_SLICE2 * N_URFtoDLF * N_PARITY, depth);
             for (i = 0; i < N_SLICE2 * N_URFtoDLF * N_PARITY; i++) {
@@ -244,9 +244,9 @@ void initPruning(const char *cache_dir)
             }
             depth++;
         }
-        // printf("2\n");
+        printf("2\n");
         dump_to_file((void*) Slice_URFtoDLF_Parity_Prun, sizeof(Slice_URFtoDLF_Parity_Prun), "Slice_URFtoDLF_Parity_Prun", cache_dir);
-        // printf("3\n");
+        printf("3\n");
     }
 
     if(check_cached_table("Slice_URtoDF_Parity_Prun", (void*) Slice_URtoDF_Parity_Prun, sizeof(Slice_URtoDF_Parity_Prun), cache_dir) != 0) {

@@ -56,7 +56,7 @@ char* solutionToString(search_t* search, int length, int depthPhase1)
 }
 
 
-char* solution(char* facelets, int maxDepth, long timeOut, int useSeparator, const char* cache_dir)
+char* solution(char facelets[54], int maxDepth, long timeOut, int useSeparator, const char* cache_dir)
 {
     search_t* search = (search_t*) calloc(1, sizeof(search_t));
     facecube_t* fc;
@@ -76,22 +76,30 @@ char* solution(char* facelets, int maxDepth, long timeOut, int useSeparator, con
     }
 
     for (i = 0; i < 54; i++)
+
+        // printf("yooooo: %c \n", facelets[i]);
+
         switch(facelets[i]) {
             case 'U':
                 count[U]++;
                 break;
+
             case 'R':
                 count[R]++;
                 break;
+
             case 'F':
                 count[F]++;
                 break;
+
             case 'D':
                 count[D]++;
                 break;
+
             case 'L':
                 count[L]++;
                 break;
+
             case 'B':
                 count[B]++;
                 break;
@@ -99,6 +107,7 @@ char* solution(char* facelets, int maxDepth, long timeOut, int useSeparator, con
 
     for (i = 0; i < 6; i++)
         if (count[i] != 9) {
+            // printf("here 1: %d \n", count[i]);
             free(search);
             return NULL;
         }
@@ -109,6 +118,7 @@ char* solution(char* facelets, int maxDepth, long timeOut, int useSeparator, con
         free(search);
         return NULL;
     }
+
 
     // +++++++++++++++++++++++ initialization +++++++++++++++++++++++++++++++++
     c = get_coordcube(cc);

@@ -5,30 +5,34 @@
 #include "search.h"
 
 EMSCRIPTEN_KEEPALIVE
-extern int solve(int argc, char **argv)
+extern const char* solve(int argc, char sourceDefinition[54])
 {
+    printf("Argument: %s \n", sourceDefinition);
+
     if (argc > 1) {
         char patternized[64];
-        char* facelets = argv[1];
-        if (argc > 2) {
-            patternize(facelets, argv[2], patternized);
-            facelets = patternized;
-        }
+        // TODO: Add targetDefinition
+        // if (argc > 2) {
+        //     patternize(sourceDefinition, &argv[2], patternized);
+        //     sourceDefinition = patternized;
+        // }
         char *sol = solution(
-            facelets,
+            sourceDefinition,
             24,
             1000,
             0,
             "cache"
         );
+        
         if (sol == NULL) {
-            puts("Unsolvable cube!");
-            return 2;
+            // TODO: Put some kind of error code so frontend knows it errored
+            return "Unsolvable cube!";
         }
-        puts(sol);
-        free(sol);
-        return 0;
-    } else {
-        return 1;
+
+        return sol; // memory should be freed for sol lol
+    }
+    else {
+        // TODO: Put some kind of error code so frontend knows it errored
+        return "Bruh - no arguments";
     }
 }
