@@ -251,10 +251,11 @@ export default class Cube {
   }
 
 
-  // ******** TODO: Figure out the cache table loading situation (.data file (to cache), or indexedDB, whichever is faster)
+  // ✅ TODO: Figure out the cache table loading situation (.data file (to cache), or indexedDB, whichever is faster)
   // Then cleanup the codebase so far
 
   // Then add below methods, then do UI and touch/mouse controls and wrap up
+  // TODO: See how the Google Doodle rubiks cube handles solving and user interaction at the same time. Should user be able to interact in the middle of solving?
 
 
 

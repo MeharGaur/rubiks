@@ -21,7 +21,7 @@ extern const char* solve(int argc, char sourceDefinition[54])
             24,
             1000,
             0,
-            "cache"
+            "/"
         );
         
         if (sol == NULL) {

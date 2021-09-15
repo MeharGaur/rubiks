@@ -113,10 +113,7 @@ var Module = typeof Module !== 'undefined' ? Module : {};
       function assert(check, msg) {
         if (!check) throw msg + new Error().stack;
       }
-  Module['FS_createPath']("/", "cache", true, true);
-Module['FS_createPath']("/cache", "cache", true, true);
-Module['FS_createPath']("/cache", "include", true, true);
-
+  
           /** @constructor */
           function DataRequest(start, end, audio) {
             this.start = start;
@@ -188,7 +185,7 @@ Module['FS_createPath']("/cache", "include", true, true);
     }
   
    }
-   loadPackage({"files": [{"filename": "/cache/coordcube.c", "start": 0, "end": 14664}, {"filename": "/cache/search.c", "start": 14664, "end": 26254}, {"filename": "/cache/README.md", "start": 26254, "end": 27277}, {"filename": "/cache/facecube.c", "start": 27277, "end": 31314}, {"filename": "/cache/.gitignore", "start": 31314, "end": 31318}, {"filename": "/cache/cubiecube.c", "start": 31318, "end": 51791}, {"filename": "/cache/prunetable_helpers.c", "start": 51791, "end": 53780}, {"filename": "/cache/solve.c", "start": 53780, "end": 54586}, {"filename": "/cache/cache/FRtoBR_Move", "start": 54586, "end": 482266}, {"filename": "/cache/cache/URFtoDLF_Move", "start": 482266, "end": 1208026}, {"filename": "/cache/cache/MergeURtoULandUBtoDF", "start": 1208026, "end": 1433818}, {"filename": "/cache/cache/URtoDF_Move", "start": 1433818, "end": 2159578}, {"filename": "/cache/cache/twistMove", "start": 2159578, "end": 2238310}, {"filename": "/cache/cache/URtoUL_Move", "start": 2238310, "end": 2285830}, {"filename": "/cache/cache/Slice_URtoDF_Parity_Prun", "start": 2285830, "end": 2769670}, {"filename": "/cache/cache/Slice_Twist_Prun", "start": 2769670, "end": 3310953}, {"filename": "/cache/cache/flipMove", "start": 3310953, "end": 3384681}, {"filename": "/cache/cache/UBtoDF_Move", "start": 3384681, "end": 3432201}, {"filename": "/cache/cache/Slice_URFtoDLF_Parity_Prun", "start": 3432201, "end": 3916041}, {"filename": "/cache/cache/Slice_Flip_Prun", "start": 3916041, "end": 4422921}, {"filename": "/cache/include/facecube.h", "start": 4422921, "end": 4424209}, {"filename": "/cache/include/edge.h", "start": 4424209, "end": 4424440}, {"filename": "/cache/include/prunetable_helpers.h", "start": 4424440, "end": 4425067}, {"filename": "/cache/include/cubiecube.h", "start": 4425067, "end": 4427192}, {"filename": "/cache/include/facelet.h", "start": 4427192, "end": 4428840}, {"filename": "/cache/include/color.h", "start": 4428840, "end": 4428984}, {"filename": "/cache/include/corner.h", "start": 4428984, "end": 4429232}, {"filename": "/cache/include/search.h", "start": 4429232, "end": 4431877}, {"filename": "/cache/include/coordcube.h", "start": 4431877, "end": 4436071}], "remote_package_size": 4436071, "package_uuid": "bd356253-e324-436d-9829-7d885f2caf0b"});
+   loadPackage({"files": [{"filename": "/FRtoBR_Move", "start": 0, "end": 427680}, {"filename": "/URFtoDLF_Move", "start": 427680, "end": 1153440}, {"filename": "/MergeURtoULandUBtoDF", "start": 1153440, "end": 1379232}, {"filename": "/URtoDF_Move", "start": 1379232, "end": 2104992}, {"filename": "/twistMove", "start": 2104992, "end": 2183724}, {"filename": "/URtoUL_Move", "start": 2183724, "end": 2231244}, {"filename": "/Slice_URtoDF_Parity_Prun", "start": 2231244, "end": 2715084}, {"filename": "/Slice_Twist_Prun", "start": 2715084, "end": 3256367}, {"filename": "/flipMove", "start": 3256367, "end": 3330095}, {"filename": "/UBtoDF_Move", "start": 3330095, "end": 3377615}, {"filename": "/Slice_URFtoDLF_Parity_Prun", "start": 3377615, "end": 3861455}, {"filename": "/Slice_Flip_Prun", "start": 3861455, "end": 4368335}], "remote_package_size": 4368335, "package_uuid": "97f527bc-4469-4f6d-ae7a-efb3c59d0ad7"});
   
   })();
   
