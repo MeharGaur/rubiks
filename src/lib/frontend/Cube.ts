@@ -8,6 +8,7 @@ import Queue from './Queue'
 import { DIMENSIONS, PIECE_SIZE } from './Config'
 import Piece from './Piece'
 import { colorMap, piecesData } from './CubeDefinition'
+import { assets } from '$app/paths'
 
 //
 
@@ -16,13 +17,17 @@ export default class Cube {
   private dimensions: number = DIMENSIONS
   private pieceSize: number = PIECE_SIZE
   private cubeSize: number
-  private pieces: Array<Piece> = [ ]
+
+  /** https://github.com/muodov/kociemba#cube-string-notation */
   private cubeDefinition: string = 'DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD'
+  private pieces: Array<Piece> = [ ]
   private cubeGroup: Group = new Group()
+
   private commandQueue: Queue = new Queue(this.executeCommand.bind(this))
 
   constructor(private scene: Scene) {
-    // this.generateGeometries()
+
+    this.loadBackend()
 
     this.cubeSize = this.dimensions * this.pieceSize
 
@@ -40,8 +45,6 @@ export default class Cube {
     const material = new MeshBasicMaterial({ vertexColors: true })
 
     // Generate the pieces (aka cubelets) 
-    // TODO: Generate based on color, not just xyz index
-    // https://github.com/muodov/kociemba#cube-string-notation
     for (const { isCore, indices, faceletPositions } of piecesData) {
       const facelets = [ ]
 
@@ -55,6 +58,8 @@ export default class Cube {
       const geometry = 
         new BoxGeometry(this.pieceSize, this.pieceSize, this.pieceSize)
         .toNonIndexed()
+
+      // TODO: Clean up all of the below logic, extract into methods for reusability
 
       const colors = [ ]
       const color = new Color()
@@ -220,8 +225,42 @@ export default class Cube {
 
   //
 
-  scramble() {
-    this.cubeDefinition = 'DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD'  
+  async loadBackend() {
+    window.Module = {
+      onRuntimeInitialized: () => {
+        const solve = window.Module.cwrap('solve', 'number', [ 'string' ])
+
+        console.log(solve('DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD'))
+
+        setTimeout(() => solve('DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD'), 10000)
+      },
+    }
+
+    const script = document.createElement('script')
+    script.src = '/backend/solve.js'
+    script.async = true
+    document.body.appendChild(script)
+    // script.onload // could return a promise but constructor funcs can't be async apparently
+  }
+
+
+  // ******** TODO: Need to add the wasm source to $lib/backend.
+  // Figure out the cache table situation (localStorage, indexedDB, whichever is faster)
+  // Load it with Vite and run it programatically 
+
+  // Then add below methods, then do UI and wrap up
+
+
+
+
+
+  getCommandsForDefinition(cubeDefinition: string) {
+    // This needs to make a call to the wasm backend to generate commands that result in the given definition string
+  }
+
+  static generateRandomDefinition() {
+    // Static method, generate a random cube definition string, using the R U L D F B
+    // ***** Make sure it generates only valid definitions
   }
 
 }

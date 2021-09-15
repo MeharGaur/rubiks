@@ -1,21 +1,27 @@
-# suh dude
+# Backend for rubiks
 
-we shall use the popular [emscripten](https://emscripten.org/index.html) to compile c/c++ to a WebAssembly binary. So it's just like gcc but supports web environments.
+using the popular [emscripten](https://emscripten.org/index.html) to compile the C program to a WebAssembly binary. It's just like gcc but supports wasm runtimes.
 
 
-## Installing emscripten
+## Credits
 
-https://emscripten.org/docs/getting_started/downloads.html
+Adapted from the C implementation of [muodov/kociemba](https://github.com/muodov/kociemba). This version compiles to a WebAssembly binary using emscripten.
 
 
 ## Compiling the binary
 
 https://emscripten.org/docs/getting_started/Tutorial.html
 
-if your current directory is root of the project, i think all that's needed to compile is 
-`em++ src/lib/backend/main.cpp -o src/lib/backend/bin/backend.wasm`
+Make sure your current directory is `src/lib/backend`, then just run `make`
 
-the `bin` directory is where the backend.wasm binary will live, which will simply get imported on the JS side. 
+the `bin` directory is where the backend.wasm binary will live, which can simply be imported through Vite on the JS side. 
 
 More notes on building:
 https://emscripten.org/docs/compiling/Building-Projects.html
+
+
+## Testing the binary from terminal
+
+Run `node bin/backend.cjs CUBE_DEFINITION` where CUBE_DEFINITION is a cube definition string. For example, `DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD`.
+
+How [cube string notation](https://github.com/muodov/kociemba#cube-string-notation) works.
