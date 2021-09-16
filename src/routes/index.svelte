@@ -79,7 +79,8 @@
 
     // Renderer
     const renderer = new WebGLRenderer({
-      canvas: canvas
+      canvas: canvas,
+      antialias: true
     })
 
     renderer.setSize(sizes.width, sizes.height)

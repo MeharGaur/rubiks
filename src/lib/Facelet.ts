@@ -1,8 +1,10 @@
+import type { Mesh } from "three"
 
 export class Facelet {
   constructor(
 
     public position: string, 
+    public mesh: Mesh,
     public hexCode: number
     
   ) { }

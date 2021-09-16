@@ -1,8 +1,8 @@
-import { BoxGeometry, Color, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial, Quaternion, Scene, Vector3 } from 'three'
+import { BoxGeometry, Color, DoubleSide, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial, PlaneGeometry, Quaternion, Scene, Vector3 } from 'three'
 import { gsap } from 'gsap'
 
 import { getCommandByCode } from './Commands'
-import { ALL_COMMAND_CODES, ALL_FACELET_POSITIONS } from './Types'
+import { ALL_COMMAND_CODES, ALL_FACELET_POSITIONS, Colors } from './Types'
 import type { Command, CommandCode, Face } from './Types'
 import Queue from './Queue'
 import { DIMENSIONS, PIECE_SIZE, SOLVED_CUBE } from './Config'
@@ -49,45 +49,30 @@ export default class Cube {
 
     // TODO: We want a nice brushed steel kinda material, would need to figure out the colors tho
     // TODO: Put black gaps between the cubes like how it would be in real life?
-    const material = new MeshBasicMaterial({ vertexColors: true })
+    const pieceMaterial = new MeshBasicMaterial({ color: 0x000000 })
+    const pieceGeometry = new BoxGeometry(this.pieceSize, this.pieceSize, this.pieceSize)
+
+    const faceletGeometry = new PlaneGeometry(this.pieceSize, this.pieceSize)
 
     // Generate the pieces (aka cubelets) 
     for (const { indices, positions } of piecesData) {
       const facelets: Array<Facelet> = [ ]
 
       for (let i = 0; i < positions.length; i++) {
-        facelets.push(
-          new Facelet(positions[i], colorMap[ positions[i][0] ])
-        )
+        // TODO: pass down as a uniform or something instead of new material for every one
+        const faceletMaterial = new MeshBasicMaterial({ color: 0xff00ff, side: DoubleSide })
+        const mesh = new Mesh(faceletGeometry, faceletMaterial)
+
+        this.cubeGroup.add(mesh)
+
+        facelets.push(new Facelet(
+          positions[i], 
+          mesh,
+          colorMap[ positions[i][0] ]
+        ))
       }
 
-      const geometry = 
-        new BoxGeometry(this.pieceSize, this.pieceSize, this.pieceSize)
-        .toNonIndexed()
-
-      geometry.setAttribute(
-        'color', 
-        new Float32BufferAttribute(
-          this.generateFaceletColors(facelets), 
-          3 
-        )
-      )
-
-      const faceletPositions = new Float32Array(54)
-
-      for (let i = 0; i < 54; i++) {
-        faceletPositions[i] = i
-      }
-
-      geometry.setAttribute(
-        'faceletPosition', 
-        new Float32BufferAttribute(
-          faceletPositions, 
-          1 
-        )
-      )
-
-      const mesh = new Mesh(geometry, material)
+      const mesh = new Mesh(pieceGeometry, pieceMaterial)
 
       // Set the position for the piece based on the current index of each axis
       mesh.position.x = (indices.x * this.pieceSize) - pieceSizeOffset
@@ -101,6 +86,45 @@ export default class Cube {
       this.pieces.push(new Piece(
         indices, facelets, mesh, this.pieceSize, pieceSizeOffset
       ))
+    }
+
+    for (const piece of this.pieces) {
+      for (const facelet of piece.facelets) {
+        facelet.mesh.position.copy(piece.mesh.position)
+
+        const face = facelet.position[0]
+        const increment = (this.pieceSize / 2) + 0.00001
+
+        facelet.mesh.material.color.set( colorMap[face] )
+
+        if (face == 'U') {
+          facelet.mesh.rotation.x = Math.PI / 2
+          facelet.mesh.position.y +=  increment
+        }
+
+        else if (face == 'R') {
+          facelet.mesh.rotation.y = Math.PI / 2
+          facelet.mesh.position.x += increment
+        }
+
+        else if (face == 'F') {
+          facelet.mesh.position.z += increment
+        }
+
+        else if (face == 'D') {
+          facelet.mesh.rotation.x = Math.PI / 2
+          facelet.mesh.position.y -= increment
+        }
+
+        else if (face == 'L') {
+          facelet.mesh.rotation.y = Math.PI / 2
+          facelet.mesh.position.x -= increment
+        }
+
+        else if (face == 'B') {
+          facelet.mesh.position.z -= increment
+        }
+      }
     }
 
     this.scene.add(this.cubeGroup) 
@@ -120,9 +144,9 @@ export default class Cube {
 
   /** Solve the cube using kociemba two-phase */
   solve() {
-    this.updateFaceString()
+    // this.updateFaceString()
 
-    this.tempo = Tempos.Scramble
+    this.tempo = Tempos.Normal
 
     this.move(
       this.findSolution(2, this.faceString)
@@ -202,100 +226,7 @@ export default class Cube {
   //
 
   private updateFaceString() {
-    const pieces = [ ]
 
-    for (const piece of this.pieces) {
-
-      const positions = piece.mesh.geometry.getAttribute('position').array
-      const colors = piece.mesh.geometry.getAttribute('color').array
-      const faceletPositions = piece.mesh.geometry.getAttribute('faceletPosition').array
-
-      const faces = [ ]
-
-      for (let i = 0; i < positions.length; i += 18) {
-        const positionSum = new Vector3()
-        let color = new Color()
-        let faceletPosition
-
-        for (let j = 0; j < 18; j++) {
-          if (faceletPositions[i + j]) {
-            faceletPosition = ALL_FACELET_POSITIONS[ faceletPositions[i + j] ]
-          }
-        }
-
-        for (let j = 2; j < 18; j += 3) {
-          const index = i + j
-
-          color.setRGB(
-            colors[index - 2],
-            colors[index - 1],
-            colors[index    ],
-          )
-    
-          const position = new Vector3(
-            positions[index - 2],
-            positions[index - 1],
-            positions[index    ],
-          )
-
-          positionSum.add(position)
-        }
-        
-        if (!color.getHex()) {
-          continue
-        }
-
-        faces.push({
-          positionSum: positionSum,
-          color,
-          faceletPosition,
-        })
-      }
-
-      pieces.push(faces)
-
-      console.log(`~~~~~~~~~`)
-    }
-
-    console.log(pieces)
-  }
-
-  //
-
-  /**
-   * A buffer attribute of a mesh is always a flat array, so we need to 
-   * generate a colors array with each RGB value in the right order.
-   */
-  private generateFaceletColors(facelets) {
-
-    const faceletColorIndices = [ ]
-
-    for (const facelet of facelets) {
-      faceletColorIndices[ getIndexFromFace( facelet.position[0] ) ] = 
-        facelet.hexCode
-    }
-
-    const colors = [ ]
-    const color = new Color()
-
-    for (let i = 0; i < 6; i++) {
-      let colorHex
-
-      if (faceletColorIndices[i]) {
-        colorHex = faceletColorIndices[i]
-      }
-      else {
-        colorHex = 0x000000
-      }
-
-      color.set(colorHex)
-
-      for (let i = 0; i < 6; i++) {
-        colors.push(color.r, color.g, color.b)
-      }
-    }
-
-    return colors
   }
   
   //
@@ -314,6 +245,10 @@ export default class Cube {
 
     for (const piece of selectedPieces) {
       layerGroup.add(piece.mesh)
+
+      for (const facelet of piece.facelets) {
+        layerGroup.add(facelet.mesh)
+      }
     }
 
     this.cubeGroup.add(layerGroup)
@@ -338,6 +273,16 @@ export default class Cube {
 
       piece.mesh.position.copy(position)
       piece.mesh.quaternion.copy(quaternion) 
+
+      for (const facelet of piece.facelets) {
+        const position = facelet.mesh.getWorldPosition(new Vector3())
+        const quaternion = facelet.mesh.getWorldQuaternion(new Quaternion())
+
+        this.cubeGroup.add(facelet.mesh)
+
+        facelet.mesh.position.copy(position)
+        facelet.mesh.quaternion.copy(quaternion) 
+      }
     }
 
     // Get rid of layer so it doesn't count as a child of cubeGroup
