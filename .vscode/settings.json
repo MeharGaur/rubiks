@@ -14,6 +14,7 @@
     "stdlib.h": "c",
     "coordcube.h": "c",
     "color.h": "c",
-    "facecube.h": "c"
+    "facecube.h": "c",
+    "corner.h": "c"
   }
 }

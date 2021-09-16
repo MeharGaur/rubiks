@@ -2,7 +2,7 @@ import { BoxGeometry, Color, Float32BufferAttribute, Group, Mesh, MeshBasicMater
 import { gsap } from 'gsap'
 
 import { getCommandByCode } from './Commands'
-import { ALL_COMMAND_CODES, ALL_FACELET_POSITIONS, Colors } from './Types'
+import { ALL_COMMAND_CODES, ALL_FACELET_POSITIONS } from './Types'
 import type { Command, CommandCode, Face } from './Types'
 import Queue from './Queue'
 import { DIMENSIONS, PIECE_SIZE, SOLVED_CUBE } from './Config'
@@ -27,7 +27,7 @@ export default class Cube {
    * Default is a solved cube
    * https://github.com/muodov/kociemba#cube-string-notation
    */
-  private faceString: string = SOLVED_CUBE
+  private faceString: string = 'DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD' // SOLVED_CUBE //  
   
   private pieces: Array<Piece> = [ ]
   private cubeGroup: Group = new Group()
@@ -73,6 +73,20 @@ export default class Cube {
         )
       )
 
+      const faceletPositions = new Float32Array(54)
+
+      for (let i = 0; i < 54; i++) {
+        faceletPositions[i] = i
+      }
+
+      geometry.setAttribute(
+        'faceletPosition', 
+        new Float32BufferAttribute(
+          faceletPositions, 
+          1 
+        )
+      )
+
       const mesh = new Mesh(geometry, material)
 
       // Set the position for the piece based on the current index of each axis
@@ -108,11 +122,11 @@ export default class Cube {
   solve() {
     this.updateFaceString()
 
-    this.tempo = Tempos.Normal
+    this.tempo = Tempos.Scramble
 
-    // this.move(
-    //   this.findSolution(2, this.faceString)
-    // )
+    this.move(
+      this.findSolution(2, this.faceString)
+    )
   }
 
   /** 
@@ -188,124 +202,62 @@ export default class Cube {
   //
 
   private updateFaceString() {
-    const faceString: Array<Face> = [ ]
-  
-    for (const faceletPosition of ALL_FACELET_POSITIONS) {
-      const pieceData = piecesData.find((pieceData) => (
-        pieceData.positions.includes(faceletPosition)
-      ))
+    const pieces = [ ]
 
-      const piece = this.pieces.find((piece) => (
-        pieceData.indices.equals(new Vector3(
-          Math.round((piece.mesh.position.x + piece.offset) / piece.size),
-          Math.round((piece.mesh.position.y + piece.offset) / piece.size),
-          Math.round((piece.mesh.position.z + piece.offset) / piece.size),
-        ))
-      ))
-      
-      const face = faceletPosition[0]
-      console.log(face)
-      const faces = [ ]
-      // const index = getIndexFromFace( faceletPosition[0] ) * 18
+    for (const piece of this.pieces) {
 
-      const colors = piece.mesh.geometry.getAttribute('color').array
       const positions = piece.mesh.geometry.getAttribute('position').array
+      const colors = piece.mesh.geometry.getAttribute('color').array
+      const faceletPositions = piece.mesh.geometry.getAttribute('faceletPosition').array
 
-      const increment = colors.length / 6
+      const faces = [ ]
 
-      for (let i = (increment - 1); i < colors.length; i += increment) {
-        const color = new Color(
-          colors[i - 2], 
-          colors[i - 1], 
-          colors[i    ]
-        )
+      for (let i = 0; i < positions.length; i += 18) {
+        const positionSum = new Vector3()
+        let color = new Color()
+        let faceletPosition
 
+        for (let j = 0; j < 18; j++) {
+          if (faceletPositions[i + j]) {
+            faceletPosition = ALL_FACELET_POSITIONS[ faceletPositions[i + j] ]
+          }
+        }
+
+        for (let j = 2; j < 18; j += 3) {
+          const index = i + j
+
+          color.setRGB(
+            colors[index - 2],
+            colors[index - 1],
+            colors[index    ],
+          )
+    
+          const position = new Vector3(
+            positions[index - 2],
+            positions[index - 1],
+            positions[index    ],
+          )
+
+          positionSum.add(position)
+        }
+        
         if (!color.getHex()) {
           continue
         }
-        
-        const averagePosition = new Vector3()
-
-        for (let j = 0; j < 6; j++) {
-          averagePosition.add(new Vector3(
-            positions[i - 2], 
-            positions[i - 1], 
-            positions[i    ],
-          ))
-        }
-
-        averagePosition.divide(new Vector3(6, 6, 6))
 
         faces.push({
+          positionSum: positionSum,
           color,
-          position: averagePosition
+          faceletPosition,
         })
       }
 
-      console.log(faces)
+      pieces.push(faces)
 
-      let compare: (a, b) => boolean
-      let faceData
-
-      if (face == 'U') {
-        compare = (a, b) => b.position.y > a.position.y
-      }    
-      else if (face == 'R') {
-        compare = (a, b) => b.position.x > a.position.x
-      }  
-      else if (face == 'F') {
-        compare = (a, b) => b.position.z > a.position.z
-      }  
-      else if (face == 'D') {
-        compare = (a, b) => b.position.y < a.position.y
-      }  
-      else if (face == 'L') {
-        compare = (a, b) => b.position.x < a.position.x
-      }  
-      else if (face == 'B') {
-        compare = (a, b) => b.position.z < a.position.z
-      }  
-
-      faceData = faces.reduce((accumulator, faceData) => {
-        if (compare(accumulator, faceData)) {
-          console.log('xddd')
-          return faceData
-        }
-        else {
-          return accumulator
-        }
-      }, faces[0])
-
-      console.log(faceData)
-
-      faceString.push(colorMap[faceData.color.getHex()])
-      
-
-      // Every vertex in a face is going to be the same color, can pick 
-      // RGB from anywhere so long as it's a consecutive group of three
-      // const hexCode = new Color(
-      //     colors[index    ],
-      //     colors[index + 1],
-      //     colors[index + 2],
-      //   )
-      //   .getHex()
-      
-      // // Don't save if it's facing inwards (0x000000 hex code)
-      // if (hexCode) {
-      //   console.log(colorMap[hexCode])
-      //   faces.push(colorMap[hexCode])
-      // }
-      // else {
-      //   console.log('found black')
-      // }
-
-      console.log(`~~~~~~~~~~~~~~~~`)
+      console.log(`~~~~~~~~~`)
     }
 
-    console.log(faceString.length)
-    console.log(faceString.join(''))
-
-    this.faceString = faceString.join('')
+    console.log(pieces)
   }
 
   //

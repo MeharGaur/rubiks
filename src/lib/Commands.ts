@@ -147,7 +147,12 @@ export function getCommandByCode(code: CommandCode, repetitions: number) {
   const commandName = Object.keys(commands)
     .find(key => commands[key].code == code)
 
-  return Object.assign({ repetitions }, commands[commandName])
+  if (commands[commandName]) {
+    return Object.assign({ repetitions }, commands[commandName])
+  }
+  else {
+    return undefined
+  }
 }
 
 

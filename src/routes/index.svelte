@@ -1,7 +1,8 @@
 <!--—————————— MARKUP ——————————-->
 
 <canvas bind:this={canvas} on:dblclick={() => {
-  cube.move(`D2 R' D' F2 B D R2 D2 R' F2 D' F2 U' B2 L2 U2 D R2 U`)
+  cube.solve()
+  // cube.move(`D2 R' D' F2 B D R2 D2 R' F2 D' F2 U' B2 L2 U2 D R2 U`)
   // cube.move(`L L' R R' U U' D D' F F' B B' M M' E E' S S'`)
 }} />
 

@@ -116,7 +116,7 @@ char* solution(char facelets[54], int maxDepth, long timeOut, int useSeparator, 
     cc = toCubieCube(fc);
 
     if ((s = verify(cc)) != 0) {
-        printf("here 2: %d \n", s); // re-run with this, see if invalid faceletString
+        // printf("here 2: %d \n", s); 
 
         free(search);
         return NULL;
