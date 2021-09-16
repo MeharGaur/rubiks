@@ -1,20 +1,12 @@
 {
   "files.associations": {
     "*.svelte": "svelte",
-    "search.h": "c",
-    "__locale": "c",
-    "__config": "c",
-    "locale": "c",
-    "stdio.h": "c",
-    "fcntl.h": "c",
-    "unistd.h": "c",
-    "stat.h": "c",
-    "prunetable_helpers.h": "c",
-    "algorithm": "c",
-    "stdlib.h": "c",
+    "cubiecube.h": "c",
     "coordcube.h": "c",
-    "color.h": "c",
     "facecube.h": "c",
-    "corner.h": "c"
+    "string.h": "c",
+    "time.h": "c",
+    "assert.h": "c",
+    "__locale": "c"
   }
 }

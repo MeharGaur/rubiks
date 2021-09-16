@@ -1,14 +1,14 @@
-import { BoxGeometry, Color, DoubleSide, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial, PlaneGeometry, Quaternion, Scene, Vector3 } from 'three'
+import { BoxGeometry, DoubleSide, Group, Mesh, MeshBasicMaterial, PlaneGeometry, Quaternion, Scene, Vector3 } from 'three'
 import { gsap } from 'gsap'
 
 import { getCommandByCode } from './Commands'
-import { ALL_COMMAND_CODES, ALL_FACELET_POSITIONS, Colors } from './Types'
+import { ALL_COMMAND_CODES, ALL_FACELET_POSITIONS, ALL_FACES, Colors } from './Types'
 import type { Command, CommandCode, Face } from './Types'
 import Queue from './Queue'
-import { DIMENSIONS, PIECE_SIZE, SOLVED_CUBE } from './Config'
+import { DIMENSIONS, PIECE_SIZE, SOLVED_CUBE, Z_FIGHT_INCREMENT } from './Config'
 import { Piece, colorMap, piecesData } from './Piece'
-import { Facelet, getIndexFromFace } from './Facelet'
-import { shuffle } from './Utils'
+import { Facelet } from './Facelet'
+import { epsilonEquals, roundEquals, shuffle } from './Utils'
 
 //
 
@@ -27,13 +27,16 @@ export default class Cube {
    * Default is a solved cube
    * https://github.com/muodov/kociemba#cube-string-notation
    */
-  private faceString: string = 'DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD' // SOLVED_CUBE //  
+  private faceString: string = SOLVED_CUBE //  'DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD' // 
   
   private pieces: Array<Piece> = [ ]
+  private facelets: Array<Facelet> = [ ]
+  private faceletLookup: { [key: string]: Vector3 } = { }
   private cubeGroup: Group = new Group()
   private commandQueue: Queue = new Queue(this.executeCommand.bind(this))
   
   findSolution: (number, string) => string
+  randomCube: () => string
   tempo: number = Tempos.Normal
 
   //
@@ -58,73 +61,91 @@ export default class Cube {
     for (const { indices, positions } of piecesData) {
       const facelets: Array<Facelet> = [ ]
 
+      const pieceMesh = new Mesh(pieceGeometry, pieceMaterial)
+
       for (let i = 0; i < positions.length; i++) {
         // TODO: pass down as a uniform or something instead of new material for every one
         const faceletMaterial = new MeshBasicMaterial({ color: 0xff00ff, side: DoubleSide })
-        const mesh = new Mesh(faceletGeometry, faceletMaterial)
+        const faceletMesh = new Mesh(faceletGeometry, faceletMaterial)
 
-        this.cubeGroup.add(mesh)
+        this.cubeGroup.add(faceletMesh)
 
-        facelets.push(new Facelet(
+        const facelet = new Facelet(
+          pieceMesh,
           positions[i], 
-          mesh,
+          faceletMesh,
           colorMap[ positions[i][0] ]
-        ))
+        )
+
+        facelets.push(facelet)
+        this.facelets.push(facelet)
       }
 
-      const mesh = new Mesh(pieceGeometry, pieceMaterial)
-
       // Set the position for the piece based on the current index of each axis
-      mesh.position.x = (indices.x * this.pieceSize) - pieceSizeOffset
-      mesh.position.y = (indices.y * this.pieceSize) - pieceSizeOffset
-      mesh.position.z = (indices.z * this.pieceSize) - pieceSizeOffset
+      pieceMesh.position.x = (indices.x * this.pieceSize) - pieceSizeOffset
+      pieceMesh.position.y = (indices.y * this.pieceSize) - pieceSizeOffset
+      pieceMesh.position.z = (indices.z * this.pieceSize) - pieceSizeOffset
 
       // Add each piece mesh to the scene so it renders
       // Delay each cube one by one:   setTimeout(() => , 1000 * (indices.x * 9 + indices.y * 3 + indices.z))
-      this.cubeGroup.add(mesh)
+      this.cubeGroup.add(pieceMesh)
 
       this.pieces.push(new Piece(
-        indices, facelets, mesh, this.pieceSize, pieceSizeOffset
+        indices, facelets, pieceMesh, this.pieceSize, pieceSizeOffset
       ))
     }
 
-    for (const piece of this.pieces) {
-      for (const facelet of piece.facelets) {
-        facelet.mesh.position.copy(piece.mesh.position)
+    // Get it into the U1 U2 U3 etc. order
+    this.facelets.sort((a, b) => {
+      const aFace = ALL_FACES.indexOf(<Face> a.position[0])
+      const bFace = ALL_FACES.indexOf(<Face> b.position[0])
 
-        const face = facelet.position[0]
-        const increment = (this.pieceSize / 2) + 0.00001
-
-        facelet.mesh.material.color.set( colorMap[face] )
-
-        if (face == 'U') {
-          facelet.mesh.rotation.x = Math.PI / 2
-          facelet.mesh.position.y +=  increment
-        }
-
-        else if (face == 'R') {
-          facelet.mesh.rotation.y = Math.PI / 2
-          facelet.mesh.position.x += increment
-        }
-
-        else if (face == 'F') {
-          facelet.mesh.position.z += increment
-        }
-
-        else if (face == 'D') {
-          facelet.mesh.rotation.x = Math.PI / 2
-          facelet.mesh.position.y -= increment
-        }
-
-        else if (face == 'L') {
-          facelet.mesh.rotation.y = Math.PI / 2
-          facelet.mesh.position.x -= increment
-        }
-
-        else if (face == 'B') {
-          facelet.mesh.position.z -= increment
-        }
+      if (aFace == bFace) {
+        return parseInt(a.position[1]) - parseInt(b.position[1])
       }
+
+      return aFace - bFace
+    })
+    
+    for (const facelet of this.facelets) {
+      facelet.mesh.position.copy(facelet.pieceMesh.position)
+
+      const face = facelet.position[0]
+      // Prevent z-fighting glitchyness
+      const increment = (this.pieceSize / 2) + Z_FIGHT_INCREMENT
+
+      facelet.mesh.material.color.set( colorMap[face] )
+
+      if (face == 'U') {
+        facelet.mesh.rotation.x = Math.PI / 2
+        facelet.mesh.position.y +=  increment
+      }
+
+      else if (face == 'R') {
+        facelet.mesh.rotation.y = Math.PI / 2
+        facelet.mesh.position.x += increment
+      }
+
+      else if (face == 'F') {
+        facelet.mesh.position.z += increment
+      }
+
+      else if (face == 'D') {
+        facelet.mesh.rotation.x = Math.PI / 2
+        facelet.mesh.position.y -= increment
+      }
+
+      else if (face == 'L') {
+        facelet.mesh.rotation.y = Math.PI / 2
+        facelet.mesh.position.x -= increment
+      }
+
+      else if (face == 'B') {
+        facelet.mesh.position.z -= increment
+      }
+
+      this.faceletLookup[facelet.position] = 
+        facelet.mesh.getWorldPosition(new Vector3())
     }
 
     this.scene.add(this.cubeGroup) 
@@ -134,12 +155,13 @@ export default class Cube {
 
   /** Scramble the cube to a random configuration */
   scramble() {
-    const randomCommands = this.randomCommandString()
-    console.log(randomCommands)
+    const randomFaceString = this.randomCube()
+    
+    console.log(randomFaceString)
 
     this.tempo = Tempos.Scramble
 
-    this.move(randomCommands)
+    // this.move(randomCommands)
   }
 
   /** Solve the cube using kociemba two-phase */
@@ -149,7 +171,8 @@ export default class Cube {
     this.tempo = Tempos.Normal
 
     this.move(
-      this.findSolution(2, this.faceString)
+      `U U' U' U`
+      // this.findSolution(2, this.faceString)
     )
   }
 
@@ -196,6 +219,7 @@ export default class Cube {
     window.Module = {
       onRuntimeInitialized: () => {
         this.findSolution = window.Module.cwrap('solve', 'string', [ 'number', 'string' ])
+        this.randomCube = window.Module.cwrap('randomCube', 'string', [  ])
 
         this.onLoad()
       },
@@ -272,18 +296,31 @@ export default class Cube {
       this.cubeGroup.add(piece.mesh)
 
       piece.mesh.position.copy(position)
-      piece.mesh.quaternion.copy(quaternion) 
+      piece.mesh.quaternion.copy(quaternion)
 
       for (const facelet of piece.facelets) {
         const position = facelet.mesh.getWorldPosition(new Vector3())
         const quaternion = facelet.mesh.getWorldQuaternion(new Quaternion())
-
+  
         this.cubeGroup.add(facelet.mesh)
-
+  
         facelet.mesh.position.copy(position)
         facelet.mesh.quaternion.copy(quaternion) 
+  
+        const faceletPosition = Object.keys(this.faceletLookup)
+          .find((key) => {
+            return epsilonEquals(this.faceletLookup[key], facelet.mesh.position) 
+          })
+  
+        console.log(facelet.position, faceletPosition)
       }
     }
+
+    console.log(
+      this.facelets
+        .map(facelet => facelet.position[0])
+        .join('')
+    )
 
     // Get rid of layer so it doesn't count as a child of cubeGroup
     layerGroup.removeFromParent()

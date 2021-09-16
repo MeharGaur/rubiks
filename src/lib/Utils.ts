@@ -37,10 +37,24 @@ export function epsilonEquals(
   b: Vector3, 
   epsilon = Number.EPSILON
 ) {
+  
+  // console.log(a, b)
+
+  // console.log(Math.abs( a.x - b.x ), Math.abs( a.y - b.y ), Math.abs( a.z - b.z ))
+
   return (
     ( Math.abs( a.x - b.x ) < epsilon ) && 
     ( Math.abs( a.y - b.y ) < epsilon ) && 
     ( Math.abs( a.z - b.z ) < epsilon )
+  )
+}
+
+
+export function roundEquals(a: Vector3, b: Vector3) {  
+  return (
+    ( Math.round(a.x) == Math.round(b.x) ) &&
+    ( Math.round(a.y) == Math.round(b.y) ) &&
+    ( Math.round(a.z) == Math.round(b.z) ) 
   )
 }
 

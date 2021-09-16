@@ -13,5 +13,7 @@ export const PIECE_SIZE = 1 /3
  */
 export const PRECISION = 3
 
+export const Z_FIGHT_INCREMENT = 0.00001
+
 /** https://github.com/muodov/kociemba#cube-string-notation */
 export const SOLVED_CUBE = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB'

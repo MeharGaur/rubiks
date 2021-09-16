@@ -185,7 +185,7 @@ var Module = typeof Module !== 'undefined' ? Module : {};
     }
   
    }
-   loadPackage({"files": [{"filename": "/FRtoBR_Move", "start": 0, "end": 427680}, {"filename": "/URFtoDLF_Move", "start": 427680, "end": 1153440}, {"filename": "/MergeURtoULandUBtoDF", "start": 1153440, "end": 1379232}, {"filename": "/URtoDF_Move", "start": 1379232, "end": 2104992}, {"filename": "/twistMove", "start": 2104992, "end": 2183724}, {"filename": "/URtoUL_Move", "start": 2183724, "end": 2231244}, {"filename": "/Slice_URtoDF_Parity_Prun", "start": 2231244, "end": 2715084}, {"filename": "/Slice_Twist_Prun", "start": 2715084, "end": 3256367}, {"filename": "/flipMove", "start": 3256367, "end": 3330095}, {"filename": "/UBtoDF_Move", "start": 3330095, "end": 3377615}, {"filename": "/Slice_URFtoDLF_Parity_Prun", "start": 3377615, "end": 3861455}, {"filename": "/Slice_Flip_Prun", "start": 3861455, "end": 4368335}], "remote_package_size": 4368335, "package_uuid": "c8fdaf55-b269-4a98-b24d-5d2984cd2a87"});
+   loadPackage({"files": [{"filename": "/FRtoBR_Move", "start": 0, "end": 427680}, {"filename": "/URFtoDLF_Move", "start": 427680, "end": 1153440}, {"filename": "/MergeURtoULandUBtoDF", "start": 1153440, "end": 1379232}, {"filename": "/URtoDF_Move", "start": 1379232, "end": 2104992}, {"filename": "/twistMove", "start": 2104992, "end": 2183724}, {"filename": "/URtoUL_Move", "start": 2183724, "end": 2231244}, {"filename": "/Slice_URtoDF_Parity_Prun", "start": 2231244, "end": 2715084}, {"filename": "/Slice_Twist_Prun", "start": 2715084, "end": 3256367}, {"filename": "/flipMove", "start": 3256367, "end": 3330095}, {"filename": "/UBtoDF_Move", "start": 3330095, "end": 3377615}, {"filename": "/Slice_URFtoDLF_Parity_Prun", "start": 3377615, "end": 3861455}, {"filename": "/Slice_Flip_Prun", "start": 3861455, "end": 4368335}], "remote_package_size": 4368335, "package_uuid": "c4926b59-fa49-4427-bba7-dd8f8777d8f7"});
   
   })();
   
@@ -1868,6 +1868,10 @@ var ASM_CONSTS = {
       var js = jsStackTrace();
       if (Module['extraStackTrace']) js += '\n' + Module['extraStackTrace']();
       return demangleAll(js);
+    }
+
+  function ___assert_fail(condition, filename, line, func) {
+      abort('Assertion failed: ' + UTF8ToString(condition) + ', at: ' + [filename ? UTF8ToString(filename) : 'unknown filename', line, func ? UTF8ToString(func) : 'unknown function']);
     }
 
   var PATH = {splitPath:function(filename) {
@@ -4789,6 +4793,7 @@ function tryParseAsDataURI(filename) {
 
 
 var asmLibraryArg = {
+  "__assert_fail": ___assert_fail,
   "__sys_access": ___sys_access,
   "__sys_fcntl64": ___sys_fcntl64,
   "__sys_ioctl": ___sys_ioctl,
@@ -4806,6 +4811,9 @@ var asmLibraryArg = {
 var asm = createWasm();
 /** @type {function(...*):?} */
 var ___wasm_call_ctors = Module["___wasm_call_ctors"] = createExportWrapper("__wasm_call_ctors");
+
+/** @type {function(...*):?} */
+var _randomCube = Module["_randomCube"] = createExportWrapper("randomCube");
 
 /** @type {function(...*):?} */
 var _free = Module["_free"] = createExportWrapper("free");
