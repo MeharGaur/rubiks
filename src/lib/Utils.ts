@@ -1,3 +1,4 @@
+import type { Vector3 } from "three";
 
 /** 
  * Knuth unbiased shuffle
@@ -26,5 +27,20 @@ export function shuffle(array: Array<any>): Array<any> {
   }
 
   return array
+}
+
+//
+
+/** https://discourse.threejs.org/t/comparing-two-vectors/12106/2 */
+export function epsilonEquals(
+  a: Vector3, 
+  b: Vector3, 
+  epsilon = Number.EPSILON
+) {
+  return (
+    ( Math.abs( a.x - b.x ) < epsilon ) && 
+    ( Math.abs( a.y - b.y ) < epsilon ) && 
+    ( Math.abs( a.z - b.z ) < epsilon )
+  )
 }
 

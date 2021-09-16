@@ -1,0 +1,7 @@
+// this file is processed separately via svelte-preprocess,
+// automatically prepended/inlined to the top of 
+// every single component's scss. Yes it's duplicate code, but the
+// value of the responsive breakpoints more than makes up.
+
+@import './variables';
+@import './mixins';

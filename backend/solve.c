@@ -11,7 +11,7 @@ extern const char* solve(int argc, char facelets[54])
 
     if (argc > 1) {
         char patternized[64];
-        // TODO: Add targetDefinition
+        // TODO: Add destination facelets (to animate to)
         // if (argc > 2) {
         //     patternize(facelets, &argv[2], patternized);
         //     facelets = patternized;

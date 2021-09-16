@@ -1,7 +1,7 @@
 import { Vector3 } from 'three'
 import type { Mesh } from 'three'
-import { Colors } from './Types'
-import type { PieceData } from './Types'
+import { ALL_FACELET_POSITIONS, Colors } from './Types'
+import type { PieceData, Face } from './Types'
 import type { Facelet } from './Facelet'
 
 export class Piece {
@@ -10,6 +10,8 @@ export class Piece {
     public indices: Vector3,
     public facelets: Array<Facelet>,
     public mesh: Mesh,
+    public size: number,
+    public offset: number,
 
   ) { }
 }
@@ -193,36 +195,23 @@ export const colorMap = {
   L: Colors.Orange,
 
   B: Colors.Blue,
+
+  //
+
+  [ Colors.White ]: 'U',
+
+  [ Colors.Red ]: 'R',
+
+  [ Colors.Green ]: 'F',
+
+  [ Colors.Yellow ]: 'D',
+
+  [ Colors.Orange ]: 'L',
+
+  [ Colors.Blue ]: 'B',
 }
 
-/** Put each color at the right position in the buffer attribute array */
-export function getIndexFromFace(face: string) {
-  let index
-      
-  // Right face is index 0
-  if (face == 'R') {
-    index = 0
-  }
-  // Left face is index 1
-  else if (face == 'L') {
-    index = 1
-  }
-  // Up face is index 2
-  else if (face == 'U') {
-    index = 2
-  }
-  // Down face is index 3
-  else if (face == 'D') {
-    index = 3
-  }
-  // Front face is index 4
-  else if (face == 'F') {
-    index = 4
-  }
-  // Back face is index 5
-  else if (face == 'B') {
-    index = 5
-  }
+//
 
-  return index
-}
+
+

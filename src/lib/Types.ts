@@ -1,30 +1,31 @@
-import type { Object3D, Vector3 } from "three"
+import type { Vector3 } from "three"
+import type { Piece } from "./Piece"
 
 /**
  * https://ruwix.com/the-rubiks-cube/notation/advanced/
  */
- export type CommandCode = 
-
+export const ALL_COMMAND_CODES = [
   // clockwise
-  `U`  | `L`  | `F`  | `R`  | `B`  | `D`  |
+  `U`  , `L`  , `F`  , `R`  , `B`  , `D`  ,
 
   // counterClockwise
-  `U'` | `L'` | `F'` | `R'` | `B'` | `D'` |
+  `U'` , `L'` , `F'` , `R'` , `B'` , `D'` ,
 
   // slice
-  `M'` | `M'` | `E`  | `E'` | `S`  | `S'` |
+  `M`  , `M'` , `E`  , `E'` , `S`  , `S'` ,
 
-  // double
-  `u`  | `l`  | `f`  | `r`  | `b`  | `d`  |
+  // // double
+  // `u`  , `l`  , `f`  , `r`  , `b`  , `d`  ,
 
-  // inverseDouble
-  `u'` | `l'` | `f'` | `r'` | `b'` | `d'` |
+  // // inverseDouble
+  // `u'` , `l'` , `f'` , `r'` , `b'` , `d'` ,
 
-  // wholeCube
-  `X`  | `X'` | `Y`  | `Y'` | `Z`  | `Z'` 
+  // // wholeCube
+  // `X`  , `X'` , `Y`  , `Y'` , `Z`  , `Z'` 
+] as const
+type CommandCodes = typeof ALL_COMMAND_CODES
+export type CommandCode = CommandCodes[number]
 
-
-export type ColorCode = `U`  | `L`  | `F`  | `R`  | `B`  | `D`
 
 export enum Colors {
   White = 0xFFFFFF,
@@ -37,7 +38,9 @@ export enum Colors {
 
   Blue = 0x0D48AC,
 
-  Yellow = 0xFED52F
+  Yellow = 0xFED52F,
+
+  Black = 0x000000,
 }
 
 export enum Axes {
@@ -65,7 +68,7 @@ export interface Command {
 
   direction: Directions.Positive | Directions.Negative
 
-  selector: (pieces: Array<Object3D>) => Array<Object3D>
+  selector: (pieces: Array<Piece>) => Array<Piece>
 }
  
 

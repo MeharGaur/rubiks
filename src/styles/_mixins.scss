@@ -1,0 +1,3 @@
+@mixin breakpoint($condition) {
+  @media #{map-get($display-breakpoints, $condition)} { @content; }
+}

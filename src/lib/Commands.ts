@@ -1,14 +1,11 @@
-import type { Object3D } from "three"
-import { PRECISION } from "./Config"
 import { Axes, Directions } from "./Types"
 import type { CommandCode, Commands } from "./Types"
+import type { Piece } from "./Piece"
+import { PRECISION } from "./Config"
 
 
 /**
  * IIFE that generates all the commands and associated metadata for a 3x3 rubik's cube
- * 
- * TODO: Refactor commands to use pieces array, not directly from the scene
- * 
  */
 const commands = ((): Commands => {
 
@@ -18,7 +15,7 @@ const commands = ((): Commands => {
       axis: Axes.X,
       direction: Directions.Positive,
       /** Get all the pieces currently at the very left of the cube */
-      selector: sortSelector((a, b) => a.position.x - b.position.x)
+      selector: sortSelector((a, b) => a.mesh.position.x - b.mesh.position.x)
     },
 
     rightClockwise: {
@@ -26,7 +23,7 @@ const commands = ((): Commands => {
       axis: Axes.X,
       direction: Directions.Negative,
       /** Get all the pieces currently at the very right of the cube */
-      selector: sortSelector((a, b) => b.position.x - a.position.x)
+      selector: sortSelector((a, b) => b.mesh.position.x - a.mesh.position.x)
     },
 
     upClockwise: {
@@ -34,7 +31,7 @@ const commands = ((): Commands => {
       axis: Axes.Y,
       direction: Directions.Negative,
       /** Get all the pieces currently at the very top of the cube */
-      selector: sortSelector((a, b) => b.position.y - a.position.y)
+      selector: sortSelector((a, b) => b.mesh.position.y - a.mesh.position.y)
     },
 
     downClockwise: {
@@ -42,7 +39,7 @@ const commands = ((): Commands => {
       axis: Axes.Y,
       direction: Directions.Positive,
       /** Get all the pieces currently at the very bottom of the cube */
-      selector: sortSelector((a, b) => a.position.y - b.position.y)
+      selector: sortSelector((a, b) => a.mesh.position.y - b.mesh.position.y)
     },
 
     frontClockwise: {
@@ -50,7 +47,7 @@ const commands = ((): Commands => {
       axis: Axes.Z,
       direction: Directions.Negative,
       /** Get all the pieces currently at the very front of the cube */
-      selector: sortSelector((a, b) => b.position.z - a.position.z)
+      selector: sortSelector((a, b) => b.mesh.position.z - a.mesh.position.z)
     },
 
     backClockwise: {
@@ -58,7 +55,7 @@ const commands = ((): Commands => {
       axis: Axes.Z,
       direction: Directions.Positive,
       /** Get all the pieces currently at the very back of the cube */
-      selector: sortSelector((a, b) => a.position.z - b.position.z)
+      selector: sortSelector((a, b) => a.mesh.position.z - b.mesh.position.z)
     },
 
     //
@@ -67,9 +64,9 @@ const commands = ((): Commands => {
       code: <CommandCode> 'M',
       axis: Axes.X,
       direction: Directions.Positive,
-      /** Get all the pieces currently where at the origin of the x-axis */
-      selector: filterSelector((piece: Object3D) => (
-        Math.abs(piece.position.x).toFixed(PRECISION) == (0).toFixed(PRECISION)
+      /** Get all the pieces currently at the origin of the x-axis */
+      selector: filterSelector((piece) => (
+        Math.abs(piece.mesh.position.x).toFixed(PRECISION) == (0).toFixed(PRECISION)
       ))
     },
 
@@ -77,9 +74,9 @@ const commands = ((): Commands => {
       code: <CommandCode> 'E',
       axis: Axes.Y,
       direction: Directions.Positive,
-      /** Get all the pieces currently where at the origin of the x-axis */
-      selector: filterSelector((piece: Object3D) => (
-        Math.abs(piece.position.y).toFixed(PRECISION) == (0).toFixed(PRECISION)
+      /** Get all the pieces currently at the origin of the y-axis */
+      selector: filterSelector((piece) => (
+        Math.abs(piece.mesh.position.y).toFixed(PRECISION) == (0).toFixed(PRECISION)
       ))
     },
 
@@ -87,9 +84,9 @@ const commands = ((): Commands => {
       code: <CommandCode> 'S',
       axis: Axes.Z,
       direction: Directions.Negative,
-      /** Get all the pieces currently where at the origin of the x-axis */
-      selector: filterSelector((piece: Object3D) => (
-        Math.abs(piece.position.z).toFixed(PRECISION) == (0).toFixed(PRECISION)
+      /** Get all the pieces currently at the origin of the z-axis */
+      selector: filterSelector((piece) => (
+        Math.abs(piece.mesh.position.z).toFixed(PRECISION) == (0).toFixed(PRECISION)
       ))
     },
   }
@@ -124,16 +121,16 @@ const commands = ((): Commands => {
 
 //
 
-function sortSelector(comparator: (a, b) => number) {
-  return (pieces: Array<Object3D>) => (
+function sortSelector(comparator: (a: Piece, b: Piece) => number) {
+  return (pieces: Array<Piece>) => (
     pieces
       .sort(comparator)
       .slice(0, 9)
   )
 }
 
-function filterSelector(predicate: (piece) => boolean) {
-  return (pieces: Array<Object3D>) => (
+function filterSelector(predicate: (piece: Piece) => boolean) {
+  return (pieces: Array<Piece>) => (
     pieces
       .filter(predicate)
       .slice(0, 9)
