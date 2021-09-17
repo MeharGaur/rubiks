@@ -1,7 +1,5 @@
 import type { Command } from './Types'
 
-// If cube is currently animating don't add user actions to queue // TODO: figure out user controls
-
 /**
  * As long as there are commands in queue, the cube will continue to animate.
  */

@@ -9,7 +9,7 @@ export const PIECE_SIZE = 1 /3
  * scene. Note that precision higher than 3 seems to result in rounding
  * errors where not all pieces would get selected.
  * 
- * TODO: don't be a monkey brain, use Number.EPSILON to compare floats properly
+ * TODO: don't be a monke brain, just use Number.EPSILON to compare floats properly
  */
 export const PRECISION = 3
 

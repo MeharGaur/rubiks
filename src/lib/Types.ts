@@ -14,20 +14,15 @@ export const ALL_COMMAND_CODES = [
   // slice
   `M`  , `M'` , `E`  , `E'` , `S`  , `S'` ,
 
-  // // double
-  // `u`  , `l`  , `f`  , `r`  , `b`  , `d`  ,
-
-  // // inverseDouble
-  // `u'` , `l'` , `f'` , `r'` , `b'` , `d'` ,
-
-  // // wholeCube
-  // `X`  , `X'` , `Y`  , `Y'` , `Z`  , `Z'` 
 ] as const
+
 type CommandCodes = typeof ALL_COMMAND_CODES
 export type CommandCode = CommandCodes[number]
 
+//
 
 export enum Colors {
+  
   White = 0xFFFFFF,
 
   Orange = 0xFF5525,
@@ -55,6 +50,12 @@ export enum Directions {
   Positive = '+',
 
   Negative = '-'
+}
+
+export enum Tempos {
+  Normal = 1,
+
+  Scramble = 2
 }
 
 //
@@ -89,5 +90,5 @@ export type FaceletPosition = FaceletPositions[number]
 export interface PieceData {
   indices: Vector3
 
-  positions: Array<FaceletPosition> 
+  faceletPositions: Array<FaceletPosition> 
 }

@@ -34,7 +34,7 @@
 
     ol {
       list-style-type: none;
-      margin-bottom: 25px;
+      margin-bottom: 27px;
       padding-left: 0;
 
       display: flex;
@@ -44,8 +44,28 @@
 
       li {
         button {
-          min-width: 100px;
-          margin: 0 15px;
+          cursor: pointer;
+
+          min-width: 148px;
+          margin: 0 33px;
+          padding: 14px 25px;
+          border: 2px solid #EEE;
+          background-color: transparent;
+          color: #FFF;
+          font-size: 20px;
+          border-radius: 30px;
+          transition: 300ms ease;
+          transition-property: background-color, color, box-shadow;
+
+          &:hover {
+            background-color: white;
+            color: black;
+          }
+
+          &:focus {
+            outline: none;
+            box-shadow: 0px 0px 25px white;
+          }
         }
       }
     }

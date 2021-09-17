@@ -5,17 +5,17 @@
 #include "search.h"
 
 EMSCRIPTEN_KEEPALIVE
-extern const char* solve(int argc, char facelets[54])
+extern const char* findSolution(char facelets[54], char destinationFacelets[54])
 {
-    printf("Argument: %s \n", facelets);
+    printf("Arguments: %s, \n %s \n", facelets, destinationFacelets);
 
-    if (argc > 1) {
+    if (facelets && facelets != "\0") {
         char patternized[64];
         // TODO: Add destination facelets (to animate to)
-        // if (argc > 2) {
-        //     patternize(facelets, &argv[2], patternized);
-        //     facelets = patternized;
-        // }
+        if (destinationFacelets && destinationFacelets != "\0") {
+            patternize(facelets, destinationFacelets, patternized);
+            facelets = patternized;
+        }
         char *sol = solution(
             facelets,
             24,

@@ -5,7 +5,7 @@ import { PRECISION } from "./Config"
 
 
 /**
- * IIFE that generates all the commands and associated metadata for a 3x3 rubik's cube
+ * IIFE that generates all the commands for a 3x3 rubik's cube
  */
 const commands = ((): Commands => {
 
@@ -64,7 +64,7 @@ const commands = ((): Commands => {
       code: <CommandCode> 'M',
       axis: Axes.X,
       direction: Directions.Positive,
-      /** Get all the pieces currently at the origin of the x-axis */
+      /** Get all the pieces currently on the x-axis */
       selector: filterSelector((piece) => (
         Math.abs(piece.mesh.position.x).toFixed(PRECISION) == (0).toFixed(PRECISION)
       ))
@@ -74,7 +74,7 @@ const commands = ((): Commands => {
       code: <CommandCode> 'E',
       axis: Axes.Y,
       direction: Directions.Positive,
-      /** Get all the pieces currently at the origin of the y-axis */
+      /** Get all the pieces currently on the y-axis */
       selector: filterSelector((piece) => (
         Math.abs(piece.mesh.position.y).toFixed(PRECISION) == (0).toFixed(PRECISION)
       ))
@@ -84,7 +84,7 @@ const commands = ((): Commands => {
       code: <CommandCode> 'S',
       axis: Axes.Z,
       direction: Directions.Negative,
-      /** Get all the pieces currently at the origin of the z-axis */
+      /** Get all the pieces currently on the z-axis */
       selector: filterSelector((piece) => (
         Math.abs(piece.mesh.position.z).toFixed(PRECISION) == (0).toFixed(PRECISION)
       ))
@@ -101,6 +101,7 @@ const commands = ((): Commands => {
     counterClockwiseCommands[counterClockwiseName] = {
       ...clockwiseCommands[clockwiseName]
     }
+
     counterClockwiseCommands[counterClockwiseName].code += `'`
 
     if (counterClockwiseCommands[counterClockwiseName].direction == Directions.Positive) {
@@ -149,9 +150,6 @@ export function getCommandByCode(code: CommandCode, repetitions: number) {
 
   if (commands[commandName]) {
     return Object.assign({ repetitions }, commands[commandName])
-  }
-  else {
-    return undefined
   }
 }
 

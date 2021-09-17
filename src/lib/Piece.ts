@@ -1,7 +1,7 @@
 import { Vector3 } from 'three'
 import type { Mesh } from 'three'
-import { ALL_FACELET_POSITIONS, Colors } from './Types'
-import type { PieceData, Face } from './Types'
+import { Colors } from './Types'
+import type { PieceData } from './Types'
 import type { Facelet } from './Facelet'
 
 export class Piece {
@@ -26,154 +26,154 @@ export class Piece {
   
   {
     indices: new Vector3(0, 0, 0),
-    positions: [ 'D7', 'L7', 'B9' ]
+    faceletPositions: [ 'D7', 'L7', 'B9' ]
   },
 
   {
     indices: new Vector3(0, 0, 1),
-    positions: [ 'D4', 'L8' ]
+    faceletPositions: [ 'D4', 'L8' ]
   },
 
   {
     indices: new Vector3(0, 0, 2),
-    positions: [ 'F7', 'D1', 'L9' ]
+    faceletPositions: [ 'F7', 'D1', 'L9' ]
   },
 
   //
 
   {
     indices: new Vector3(0, 1, 0),
-    positions: [ 'L4', 'B6' ]
+    faceletPositions: [ 'L4', 'B6' ]
   },
   
   {
     indices: new Vector3(0, 1, 1),
-    positions: [ 'L5' ]
+    faceletPositions: [ 'L5' ]
   },
 
   {
     indices: new Vector3(0, 1, 2),
-    positions: [ 'F4', 'L6' ]
+    faceletPositions: [ 'F4', 'L6' ]
   },
 
   //
 
   {
     indices: new Vector3(0, 2, 0),
-    positions: [ 'U1', 'L1', 'B3' ]
+    faceletPositions: [ 'U1', 'L1', 'B3' ]
   },
 
   {
     indices: new Vector3(0, 2, 1),
-    positions: [ 'U4', 'L2' ]
+    faceletPositions: [ 'U4', 'L2' ]
   },
 
   {
     indices: new Vector3(0, 2, 2),
-    positions: [ 'U7', 'F1', 'L3' ]
+    faceletPositions: [ 'U7', 'F1', 'L3' ]
   },
 
   // —————
 
   {
     indices: new Vector3(1, 0, 0),
-    positions: [ 'D8', 'B8' ]
+    faceletPositions: [ 'D8', 'B8' ]
   },
 
   {
     indices: new Vector3(1, 0, 1),
-    positions: [ 'D5' ]
+    faceletPositions: [ 'D5' ]
   },
 
   {
     indices: new Vector3(1, 0, 2),
-    positions: [ 'D2', 'F8' ]
+    faceletPositions: [ 'D2', 'F8' ]
   },
 
   //
 
   {
     indices: new Vector3(1, 1, 0),
-    positions: [ 'B5' ]
+    faceletPositions: [ 'B5' ]
   },
 
   {
     // isCore: true, -- this is the core piece at the very center of cube
     indices: new Vector3(1, 1, 1),
-    positions: [ ]
+    faceletPositions: [ ]
   },
 
   {
     indices: new Vector3(1, 1, 2),
-    positions: [ 'F5' ]
+    faceletPositions: [ 'F5' ]
   },
 
   //
 
   {
     indices: new Vector3(1, 2, 0),
-    positions: [ 'U2', 'B2' ]
+    faceletPositions: [ 'U2', 'B2' ]
   },
 
   {
     indices: new Vector3(1, 2, 1),
-    positions: [ 'U5' ]
+    faceletPositions: [ 'U5' ]
   },
 
   {
     indices: new Vector3(1, 2, 2),
-    positions: [ 'U8', 'F2' ]
+    faceletPositions: [ 'U8', 'F2' ]
   },
 
   // —————
 
   {
     indices: new Vector3(2, 0, 0),
-    positions: [ 'R9', 'B7', 'D9' ]
+    faceletPositions: [ 'R9', 'B7', 'D9' ]
   },
 
   {
     indices: new Vector3(2, 0, 1),
-    positions: [ 'R8', 'D6' ]
+    faceletPositions: [ 'R8', 'D6' ]
   },
 
   {
     indices: new Vector3(2, 0, 2),
-    positions: [ 'F9', 'R7', 'D3' ]
+    faceletPositions: [ 'F9', 'R7', 'D3' ]
   },
 
   //
 
   {
     indices: new Vector3(2, 1, 0),
-    positions: [ 'R6', 'B4' ]
+    faceletPositions: [ 'R6', 'B4' ]
   },
 
   {
     indices: new Vector3(2, 1, 1),
-    positions: [ 'R5' ]
+    faceletPositions: [ 'R5' ]
   },
 
   {
     indices: new Vector3(2, 1, 2),
-    positions: [ 'R4', 'F6' ]
+    faceletPositions: [ 'R4', 'F6' ]
   },
 
   //
 
   {
     indices: new Vector3(2, 2, 0),
-    positions: [ 'R3', 'B1', 'U3' ]
+    faceletPositions: [ 'R3', 'B1', 'U3' ]
   },
 
   {
     indices: new Vector3(2, 2, 1),
-    positions: [ 'R2', 'U6' ]
+    faceletPositions: [ 'R2', 'U6' ]
   },
 
   {
     indices: new Vector3(2, 2, 2),
-    positions: [ 'R1', 'U9', 'F3' ]
+    faceletPositions: [ 'R1', 'U9', 'F3' ]
   },
 
 ]
@@ -181,7 +181,7 @@ export class Piece {
 //
 
 /**
- * Cube faces lookup to see which facelets of a Piece should be what color
+ * Cube color lookup to see what color a facelet should be
  */
 export const colorMap = {
   U: Colors.White,

@@ -2,13 +2,12 @@ import { BoxGeometry, DoubleSide, Group, Mesh, MeshBasicMaterial, PlaneGeometry,
 import { gsap } from 'gsap'
 
 import { getCommandByCode } from './Commands'
-import { ALL_COMMAND_CODES, ALL_FACELET_POSITIONS, ALL_FACES, Colors } from './Types'
-import type { Command, CommandCode, Face } from './Types'
+import { Tempos } from './Types'
+import type { Command, CommandCode } from './Types'
 import Queue from './Queue'
 import { DIMENSIONS, PIECE_SIZE, SOLVED_CUBE, Z_FIGHT_INCREMENT } from './Config'
 import { Piece, colorMap, piecesData } from './Piece'
 import { Facelet } from './Facelet'
-import { epsilonEquals, roundEquals, shuffle } from './Utils'
 
 //
 
@@ -27,16 +26,16 @@ export default class Cube {
    * Default is a solved cube
    * https://github.com/muodov/kociemba#cube-string-notation
    */
-  private faceString: string = SOLVED_CUBE //  'DRLUUBFBRBLURRLRUBLRDDFDLFUFUFFDBRDUBRUFLLFDDBFLUBLRBD' // 
-  
+  private faceString: string = SOLVED_CUBE
+
   private pieces: Array<Piece> = [ ]
   private facelets: Array<Facelet> = [ ]
-  private faceletLookup: { [key: string]: Vector3 } = { }
   private cubeGroup: Group = new Group()
   private commandQueue: Queue = new Queue(this.executeCommand.bind(this))
   
-  findSolution: (number, string) => string
+  findSolution: (faceString: string, destinationString?: string) => string
   randomCube: () => string
+  loading: boolean = true
   tempo: number = Tempos.Normal
 
   //
@@ -58,12 +57,13 @@ export default class Cube {
     const faceletGeometry = new PlaneGeometry(this.pieceSize, this.pieceSize)
 
     // Generate the pieces (aka cubelets) 
-    for (const { indices, positions } of piecesData) {
+    for (const { indices, faceletPositions } of piecesData) {
       const facelets: Array<Facelet> = [ ]
 
       const pieceMesh = new Mesh(pieceGeometry, pieceMaterial)
 
-      for (let i = 0; i < positions.length; i++) {
+      // Generate the facelets (aka stickers)
+      for (let i = 0; i < faceletPositions.length; i++) {
         // TODO: pass down as a uniform or something instead of new material for every one
         const faceletMaterial = new MeshBasicMaterial({ color: 0xff00ff, side: DoubleSide })
         const faceletMesh = new Mesh(faceletGeometry, faceletMaterial)
@@ -72,9 +72,8 @@ export default class Cube {
 
         const facelet = new Facelet(
           pieceMesh,
-          positions[i], 
-          faceletMesh,
-          colorMap[ positions[i][0] ]
+          faceletPositions[i], 
+          faceletMesh
         )
 
         facelets.push(facelet)
@@ -94,27 +93,19 @@ export default class Cube {
         indices, facelets, pieceMesh, this.pieceSize, pieceSizeOffset
       ))
     }
-
-    // Get it into the U1 U2 U3 etc. order
-    this.facelets.sort((a, b) => {
-      const aFace = ALL_FACES.indexOf(<Face> a.position[0])
-      const bFace = ALL_FACES.indexOf(<Face> b.position[0])
-
-      if (aFace == bFace) {
-        return parseInt(a.position[1]) - parseInt(b.position[1])
-      }
-
-      return aFace - bFace
-    })
     
+    // Properly position each facelet around the cube
     for (const facelet of this.facelets) {
-      facelet.mesh.position.copy(facelet.pieceMesh.position)
-
+      
       const face = facelet.position[0]
-      // Prevent z-fighting glitchyness
+      
+      // Offset by half piece size, add Z_FIGHT increment to prevent z-fighting
       const increment = (this.pieceSize / 2) + Z_FIGHT_INCREMENT
 
+      // @ts-ignore
       facelet.mesh.material.color.set( colorMap[face] )
+      
+      facelet.mesh.position.copy(facelet.pieceMesh.position)
 
       if (face == 'U') {
         facelet.mesh.rotation.x = Math.PI / 2
@@ -143,9 +134,6 @@ export default class Cube {
       else if (face == 'B') {
         facelet.mesh.position.z -= increment
       }
-
-      this.faceletLookup[facelet.position] = 
-        facelet.mesh.getWorldPosition(new Vector3())
     }
 
     this.scene.add(this.cubeGroup) 
@@ -156,31 +144,40 @@ export default class Cube {
   /** Scramble the cube to a random configuration */
   scramble() {
     const randomFaceString = this.randomCube()
-    
-    console.log(randomFaceString)
+
+    const commandString = this.findSolution(
+      this.faceString, 
+      randomFaceString
+    ) 
 
     this.tempo = Tempos.Scramble
 
-    // this.move(randomCommands)
+    this.move(commandString)
+
+    this.faceString = randomFaceString
   }
 
   /** Solve the cube using kociemba two-phase */
   solve() {
-    // this.updateFaceString()
+    if (this.faceString == SOLVED_CUBE) {
+      return alert('The cube is already solved– try scrambling it!')
+    }
+
+    const commandString = this.findSolution(this.faceString)
 
     this.tempo = Tempos.Normal
 
     this.move(
-      `U U' U' U`
-      // this.findSolution(2, this.faceString)
+      commandString  
     )
+
+    this.faceString = SOLVED_CUBE
   }
 
   /** 
    * Parse a string of command codes, enqueue each command.
    * e.x. "U L R U F R' B D U'"
    * https://ruwix.com/the-rubiks-cube/notation/
-   * https://ruwix.com/the-rubiks-cube/notation/advanced/
    */
   move(commandString: string) {
     const commandCodes = <Array<CommandCode>> commandString.split(' ')
@@ -210,18 +207,15 @@ export default class Cube {
 
   //
 
-  private onLoad() {
-    // this.scramble()
-  }
-
-  // TODO: Reduce the filesize of solve.js generated by emscripten as much as possible. Don't need all the extra node stuff or whatever.
+  // TODO: Reduce the filesize of backend/index.js generated by emscripten as much as possible. Don't need all the extra node stuff or whatever.
   private loadBackend() {
     window.Module = {
       onRuntimeInitialized: () => {
-        this.findSolution = window.Module.cwrap('solve', 'string', [ 'number', 'string' ])
+        this.findSolution = window.Module.cwrap('findSolution', 'string', [ 'string', 'string' ])
         this.randomCube = window.Module.cwrap('randomCube', 'string', [  ])
-
-        this.onLoad()
+        
+        // TODO: expose a promise for on load
+        this.loading = false
       },
 
       locateFile: (fileName) => {
@@ -232,25 +226,11 @@ export default class Cube {
     // Run Emscripten glue code if not already run
     if (!document.querySelector('#solver')) {
       const script = document.createElement('script')
-      script.src = '/backend/solve.js'
+      script.src = '/backend/index.js'
       script.async = true
       script.id = "solver"
       document.body.appendChild(script)
-      // script.onload = () => { } // could return a promise
     }
-  }
-
-  //
-
-  private randomCommandString() {
-    // ***** Make sure it generates only valid definitions
-    return shuffle([ ...ALL_COMMAND_CODES,  ...ALL_COMMAND_CODES ]).join(' ')
-  }
-
-  //
-
-  private updateFaceString() {
-
   }
   
   //
@@ -258,8 +238,6 @@ export default class Cube {
   /**
    * Execute the command currently at the top of the queue. Calls itself 
    * recursively until the queue is empty.
-   * 
-   * TODO: Cubes are not updating in time only in middle layer selection
    */
   private async executeCommand(command: Command) {
 
@@ -305,22 +283,9 @@ export default class Cube {
         this.cubeGroup.add(facelet.mesh)
   
         facelet.mesh.position.copy(position)
-        facelet.mesh.quaternion.copy(quaternion) 
-  
-        const faceletPosition = Object.keys(this.faceletLookup)
-          .find((key) => {
-            return epsilonEquals(this.faceletLookup[key], facelet.mesh.position) 
-          })
-  
-        console.log(facelet.position, faceletPosition)
+        facelet.mesh.quaternion.copy(quaternion)
       }
     }
-
-    console.log(
-      this.facelets
-        .map(facelet => facelet.position[0])
-        .join('')
-    )
 
     // Get rid of layer so it doesn't count as a child of cubeGroup
     layerGroup.removeFromParent()
@@ -334,29 +299,27 @@ export default class Cube {
     }
   }
 
+  //
+
   private calculateTweenVars(repetitions: number) {
+
     if (this.tempo == Tempos.Normal) {
       return {
-        duration: 0.7 + (repetitions * 0.3),
-        ease: 'back.inOut(1)'
+        duration: 0.4 + (repetitions * 0.3),
+        ease: 'back.inOut(1.15)'
       }
     }
+    
     else if (this.tempo == Tempos.Scramble) {
       return {
-        duration: 0.15,
-        ease: 'Power1.inOut'
+        // duration: 0.3 + ((repetitions - 1) * 0.25),
+        duration: 0.25 + ((repetitions - 1) * 0.2),
+        ease: 'Power1.inOut(2)'
       }
     }
   }
 
   //
 
-}
-
-
-enum Tempos {
-  Normal = 1,
-
-  Scramble = 2
 }
 
